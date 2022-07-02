@@ -50,11 +50,12 @@ let
       '';
 
       installPhase = ''
-        mkdir -p $out
+        mkdir --parents $out
         echo "copying generated code"
         cp --verbose --recursive ${dist}/generated $out
         echo "copying assets"
         cp --verbose --recursive index.html assets $out
+        touch $out/.nojekyll
       '';
     };
 in mkDerivation {
