@@ -45,7 +45,7 @@ main =
         { init = init
         , update = update
         , subscriptions = \_ -> Sub.none
-        , view = \model -> { title = "Yes I do!", body = [ view model ] }
+        , view = \model -> { title = "Engy and Ramses", body = [ view model ] }
         }
 
 
