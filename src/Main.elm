@@ -291,7 +291,7 @@ viewPoem =
     textColumn
         [ width fill
         , centerX
-        , fontSizeScaled 4
+        , fontSizeScaled 3
         , Font.family [ Font.typeface "Amiri" ]
         , spacingScaled 13
         ]
