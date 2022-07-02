@@ -7,8 +7,12 @@ import Element
         ( Attribute
         , Color
         , Element
+        , above
         , alignBottom
+        , alignLeft
+        , alignRight
         , alignTop
+        , behindContent
         , centerX
         , centerY
         , column
@@ -16,14 +20,20 @@ import Element
         , fill
         , height
         , htmlAttribute
+        , image
         , inFront
         , maximum
+        , minimum
         , newTabLink
+        , onRight
         , padding
         , paragraph
         , px
         , rgb255
         , rgba255
+        , rotate
+        , row
+        , scale
         , shrink
         , text
         , textColumn
@@ -177,6 +187,21 @@ blackTransparent =
     rgba255 0 0 0 0.4
 
 
+pastelBlue : Color
+pastelBlue =
+    rgb255 118 156 172
+
+
+pastelLightBlue : Color
+pastelLightBlue =
+    rgb255 182 222 232
+
+
+pastelYellow : Color
+pastelYellow =
+    rgb255 249 247 209
+
+
 init : () -> ( Model, Cmd Msg )
 init _ =
     ( MkModel, Cmd.none )
@@ -192,17 +217,17 @@ update msg model =
             ( model, jumpToPage page )
 
 
+headerHeight : Int
+headerHeight =
+    menuFontSize + 2 * pageMenuButtonPadding
+
+
 jumpToPage : Page -> Cmd Msg
 jumpToPage =
-    let
-        headerHeight : Float
-        headerHeight =
-            toFloat <| menuFontSize + 2 * pageMenuButtonPadding
-    in
     Task.attempt (\_ -> NoOp)
         << Task.andThen
             (\info ->
-                Dom.setViewport info.element.x (info.element.y - headerHeight)
+                Dom.setViewport info.element.x (info.element.y - toFloat headerHeight)
             )
         << Dom.getElement
         << pageId
@@ -218,8 +243,7 @@ view model =
             }
     in
     Element.layoutWith { options = [ Element.focusStyle focusStyle ] }
-        [ Background.color white
-        , width fill
+        [ width fill
         , height fill
         , fontSizeScaled 1
         , Font.family
@@ -268,10 +292,10 @@ pageMenuButton page =
 viewElement : Model -> Element Msg
 viewElement model =
     column
-        [ alignTop
-        , width fill
-        , height fill
-        , spacingScaled 13
+        [ width fill
+        , spacingScaled 14
+        , Background.color pastelBlue
+        , Font.color pastelYellow
         ]
         [ viewIntro model
         , viewEvents model
@@ -303,34 +327,53 @@ viewPoem =
 
 viewIntro : Model -> Element Msg
 viewIntro _ =
-    el
+    let
+        desertImg : Element Msg
+        desertImg =
+            el [ width shrink, height shrink, alignTop ] <|
+                image
+                    [ alignTop
+                    , alignRight
+                    , width <| maximum 400 shrink
+                    , height <| maximum 400 shrink
+                    , rotate <| -pi / 6
+
+                    --, scale 0.2
+                    , Border.width <| scaleSpacing 9
+                    , Border.color white
+                    ]
+                    { src = "assets/cropped_desert.jpg"
+                    , description = "in the dessert"
+                    }
+    in
+    column
         [ pageIdAttr Home
         , centerX
         , width fill
-        , height <| px 600
-        , Background.image "assets/back2.png"
+        , height <| minimum 500 fill
         ]
-    <|
-        textColumn
-            [ centerX
-            , centerY
-            , width fill
-            , spacingScaled 14
-            , paddingScaled 0 -- TODO: verify
-            , Font.color white
-            ]
-            [ paragraph
-                [ Font.center
-                , fontSizeScaled 11
-                , Font.bold
-                , Font.family
-                    [ Font.typeface "Tangerine"
-                    , Font.serif
-                    ]
+        [ el [ height << px <| headerHeight ] Element.none
+        , el [ centerX, centerY ] <|
+            textColumn
+                [ centerX
+                , width fill
+                , height fill
+                , spacingScaled 17
+                , paddingScaled 0
                 ]
-                [ text "Engy and Ramses" ]
-            , viewPoem
-            ]
+                [ paragraph
+                    [ Font.center
+                    , fontSizeScaled 11
+                    , Font.bold
+                    , Font.family
+                        [ Font.typeface "Tangerine"
+                        , Font.serif
+                        ]
+                    ]
+                    [ text "Engy and Ramses" ]
+                , viewPoem
+                ]
+        ]
 
 
 viewPageTitle : Page -> Element Msg
@@ -388,10 +431,7 @@ viewEvents _ =
     in
     column
         [ pageIdAttr Events
-        , Background.color white
-        , Font.color black
         , width fill
-        , paddingScaled 11
         , spacingScaled 13
         ]
         [ viewPageTitle Events
@@ -399,7 +439,7 @@ viewEvents _ =
             [ width <| maximum 1100 fill
             , height fill
             , centerX
-            , paddingScaled 11
+            , paddingScaled 5
             , spacingScaled 14
             ]
             [ viewEvent officiationEvent
@@ -412,8 +452,13 @@ viewEventSummary : Event -> Element Msg
 viewEventSummary (MkEvent event) =
     column
         [ width shrink
-        , height fill
+        , height shrink
+        , Border.color pastelLightBlue
+        , Border.width << scaleSpacing <| 0
+        , Border.solid
+        , Border.rounded 3
         , spacingScaled 11
+        , paddingScaled 5
         , centerX
         ]
         [ el
@@ -437,8 +482,8 @@ viewEventSummary (MkEvent event) =
                 el
                     [ centerX
                     , paddingScaled 6
-                    , Background.color black
-                    , Font.color white
+                    , Background.color pastelYellow
+                    , Font.color pastelBlue
                     , Font.regular
                     ]
                 <|
@@ -512,8 +557,6 @@ viewAccomodation _ =
     in
     column
         [ pageIdAttr Accommodation
-        , Background.color black
-        , Font.color white
         , width fill
         , paddingScaled 11
         , spacingScaled 13
@@ -536,8 +579,6 @@ viewFAQ _ =
     in
     column
         [ pageIdAttr FAQ
-        , Background.color white
-        , Font.color black
         , width fill
         , paddingScaled 11
         , spacingScaled 13
