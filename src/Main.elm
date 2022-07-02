@@ -271,6 +271,7 @@ viewElement model =
         [ alignTop
         , width fill
         , height fill
+        , spacingScaled 13
         ]
         [ viewIntro model
         , viewEvents model
@@ -391,7 +392,7 @@ viewEvents _ =
         , Font.color black
         , width fill
         , paddingScaled 11
-        , spacingScaled 14
+        , spacingScaled 13
         ]
         [ viewPageTitle Events
         , wrappedRow
@@ -456,7 +457,7 @@ viewAccomodation _ =
                 , centerX
                 , Font.center
                 , fontSizeScaled 2
-                , spacingScaled 16
+                , spacingScaled 15
                 ]
                 [ paragraph []
                     [ text """
@@ -515,7 +516,7 @@ viewAccomodation _ =
         , Font.color white
         , width fill
         , paddingScaled 11
-        , spacingScaled 14
+        , spacingScaled 13
         ]
         [ viewPageTitle Accommodation
         , el
@@ -539,7 +540,7 @@ viewFAQ _ =
         , Font.color black
         , width fill
         , paddingScaled 11
-        , spacingScaled 14
+        , spacingScaled 13
         ]
         [ viewPageTitle FAQ
         , el
