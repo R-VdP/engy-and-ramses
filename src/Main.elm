@@ -494,7 +494,7 @@ viewAccomodation _ =
                     , newTabLink []
                         { url = "https://goo.gl/maps/7hjch9G8Z6vj39dx7"
                         , label =
-                            el [ Font.underline ] <| text "the Pearl"
+                            el [ Font.underline ] <| text "Pearl"
                         }
                     , text " hotels."
                     ]
