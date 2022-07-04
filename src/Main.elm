@@ -299,7 +299,7 @@ view model =
 
         windowWidth : Length
         windowWidth =
-            minimum 340 fill
+            minimum 350 fill
     in
     Element.layoutWith { options = [ Element.focusStyle focusStyle ] }
         [ width windowWidth
@@ -433,17 +433,17 @@ viewIntro { windowSize } =
             <|
                 desertPhoto 200
 
-        smallVerticalPhotos : Element Msg
-        smallVerticalPhotos =
+        smallPhotos : Element Msg
+        smallPhotos =
             el
                 [ centerX
                 , alignTop
                 , moveRight 60
-                , moveUp 20
+                , moveDown 10
                 , inFront <|
                     el
                         [ moveLeft 120
-                        , moveDown 10
+                        , moveDown 20
                         ]
                     <|
                         berlinPhoto 150
@@ -531,8 +531,8 @@ viewIntro { windowSize } =
           then
             el [ width fill ] horizontalPhotos
 
-          else if not wideScreen && windowSize.height >= 700 then
-            el [ width fill ] smallVerticalPhotos
+          else if not wideScreen && windowSize.height >= 650 then
+            el [ width fill ] smallPhotos
 
           else
             Element.none
