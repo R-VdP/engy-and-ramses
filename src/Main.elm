@@ -3,22 +3,33 @@ module Main exposing (main)
 import Browser
 import Browser.Dom as Dom
 import Browser.Events as BrowserE
+import Colours
+    exposing
+        ( almostWhite
+        , blackTransparent
+        , darkPastelBlue
+        , darkPastelGreen
+        , darkPink
+        , darkYellow
+        , mintGreen
+        , pastelBlue
+        , pastelLightBlue
+        , pastelLightBlue2
+        , white
+        )
 import Element
     exposing
         ( Attribute
         , Color
         , Element
         , Length
-        , above
         , alignBottom
-        , alignLeft
         , alignRight
         , alignTop
         , behindContent
         , below
         , centerX
         , centerY
-        , clipX
         , column
         , el
         , fill
@@ -33,18 +44,12 @@ import Element
         , moveRight
         , moveUp
         , newTabLink
-        , onRight
         , padding
         , paddingXY
         , paragraph
         , px
-        , rgb255
-        , rgba255
         , rotate
-        , row
-        , scale
         , shrink
-        , spacingXY
         , text
         , textColumn
         , width
@@ -52,7 +57,7 @@ import Element
         )
 import Element.Background as Background
 import Element.Border as Border
-import Element.Font as Font
+import Element.Font as Font exposing (Font)
 import Element.Input as Input
 import Html exposing (Html)
 import Html.Attributes exposing (id)
@@ -151,6 +156,36 @@ type alias Event =
     }
 
 
+backgroundColour : Color
+backgroundColour =
+    darkPastelGreen
+
+
+titleColour : Color
+titleColour =
+    darkPink
+
+
+textColour : Color
+textColour =
+    darkYellow
+
+
+mainFont : Font
+mainFont =
+    Font.typeface "Cormorant Garamond"
+
+
+introFont : Font
+introFont =
+    Font.typeface "Twinkle Star"
+
+
+arabicFont : Font
+arabicFont =
+    Font.typeface "Amiri"
+
+
 scaleFontSize : Int -> Int
 scaleFontSize =
     round << Element.modular 20 1.15
@@ -194,36 +229,6 @@ maxContentWidth =
 maxContentTextWidth : Int
 maxContentTextWidth =
     700
-
-
-white : Color
-white =
-    rgb255 255 255 255
-
-
-black : Color
-black =
-    rgb255 0 0 0
-
-
-blackTransparent : Color
-blackTransparent =
-    rgba255 0 0 0 0.4
-
-
-pastelBlue : Color
-pastelBlue =
-    rgb255 118 156 172
-
-
-pastelLightBlue : Color
-pastelLightBlue =
-    rgb255 182 222 232
-
-
-pastelYellow : Color
-pastelYellow =
-    rgb255 249 247 209
 
 
 init : () -> ( Model, Cmd Msg )
@@ -305,7 +310,7 @@ view model =
         [ width windowWidth
         , fontSizeScaled 1
         , Font.family
-            [ Font.typeface "Cormorant Garamond"
+            [ mainFont
             , Font.serif
             ]
         , inFront <| el [ width windowWidth ] menu
@@ -352,8 +357,8 @@ viewElement model =
     column
         [ width fill
         , spacingScaled 14
-        , Background.color pastelBlue
-        , Font.color pastelYellow
+        , Background.color backgroundColour
+        , Font.color textColour
         ]
         [ viewIntro model
         , viewEvents model
@@ -375,7 +380,8 @@ viewPoem =
         [ width fill
         , centerX
         , fontSizeScaled 3
-        , Font.family [ Font.typeface "Amiri" ]
+        , Font.family [ arabicFont ]
+        , Font.color almostWhite
         , spacingScaled 13
         ]
         [ lineToParagraph poemLine1
@@ -500,9 +506,10 @@ viewIntro { windowSize } =
                 [ paragraph
                     [ Font.center
                     , fontSizeScaled 11
+                    , Font.color titleColour
                     , Font.bold
                     , Font.family
-                        [ Font.typeface "Tangerine"
+                        [ introFont
                         , Font.serif
                         ]
                     ]
@@ -510,9 +517,9 @@ viewIntro { windowSize } =
                 , viewPoem
                 , paragraph
                     [ Font.center
-                    , fontSizeScaled 6
+                    , fontSizeScaled 3
                     , Font.family
-                        [ Font.typeface "Tangerine"
+                        [ introFont
                         , Font.serif
                         ]
                     ]
@@ -531,7 +538,13 @@ viewIntro { windowSize } =
           then
             el [ width fill ] horizontalPhotos
 
-          else if not wideScreen && windowSize.height >= 650 then
+          else if
+            not wideScreen
+                && windowSize.width
+                >= 375
+                && windowSize.height
+                >= 650
+          then
             el [ width fill ] smallPhotos
 
           else
@@ -544,9 +557,10 @@ viewPageTitle page =
     paragraph
         [ alignTop
         , centerX
-        , fontSizeScaled 5
+        , fontSizeScaled 7
         , Font.bold
         , Font.center
+        , Font.color titleColour
         ]
         [ text << pageTitle <| page ]
 
@@ -646,7 +660,7 @@ viewEventSummary event =
                 el
                     [ centerX
                     , paddingScaled 6
-                    , Background.color pastelYellow
+                    , Background.color textColour
                     , Font.color pastelBlue
                     , Font.regular
                     ]
