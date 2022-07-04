@@ -2,19 +2,23 @@ module Main exposing (main)
 
 import Browser
 import Browser.Dom as Dom
+import Browser.Events as BrowserE
 import Element
     exposing
         ( Attribute
         , Color
         , Element
+        , Length
         , above
         , alignBottom
         , alignLeft
         , alignRight
         , alignTop
         , behindContent
+        , below
         , centerX
         , centerY
+        , clipX
         , column
         , el
         , fill
@@ -24,9 +28,14 @@ import Element
         , inFront
         , maximum
         , minimum
+        , moveDown
+        , moveLeft
+        , moveRight
+        , moveUp
         , newTabLink
         , onRight
         , padding
+        , paddingXY
         , paragraph
         , px
         , rgb255
@@ -35,6 +44,7 @@ import Element
         , row
         , scale
         , shrink
+        , spacingXY
         , text
         , textColumn
         , width
@@ -54,7 +64,7 @@ main =
     Browser.document
         { init = init
         , update = update
-        , subscriptions = \_ -> Sub.none
+        , subscriptions = subscriptions
         , view = \model -> { title = "Engy and Ramses", body = [ view model ] }
         }
 
@@ -118,23 +128,27 @@ pageIdAttr =
     htmlAttribute << id << pageId
 
 
+type alias WindowSize =
+    { width : Int, height : Int }
+
+
 type Msg
     = GoToPage Page
+    | WindowResized WindowSize
     | NoOp
 
 
-type Model
-    = MkModel
+type alias Model =
+    { windowSize : WindowSize }
 
 
-type Event
-    = MkEvent
-        { name : String
-        , datetime : String
-        , location : String
-        , location2 : String
-        , mapsUrl : String
-        }
+type alias Event =
+    { name : String
+    , datetime : String
+    , location : String
+    , location2 : String
+    , mapsUrl : String
+    }
 
 
 scaleFontSize : Int -> Int
@@ -172,6 +186,16 @@ pageMenuButtonPadding =
     scaleSpacing 0
 
 
+maxContentWidth : Int
+maxContentWidth =
+    900
+
+
+maxContentTextWidth : Int
+maxContentTextWidth =
+    700
+
+
 white : Color
 white =
     rgb255 255 255 255
@@ -204,7 +228,21 @@ pastelYellow =
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( MkModel, Cmd.none )
+    let
+        {- We use floor since Browser.Event.onResize returns only Ints.
+           We will only use this info to estimate the size of the window,
+           so the loss of accuracy is not really important here.
+        -}
+        handleViewportInfo : Dom.Viewport -> Msg
+        handleViewportInfo vp =
+            WindowResized
+                { width = floor vp.viewport.width
+                , height = floor vp.viewport.height
+                }
+    in
+    ( { windowSize = { width = 0, height = 0 } }
+    , Task.perform handleViewportInfo Dom.getViewport
+    )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -213,8 +251,25 @@ update msg model =
         NoOp ->
             ( model, Cmd.none )
 
+        WindowResized { width, height } ->
+            ( { windowSize =
+                    { width = width
+                    , height = height
+                    }
+              }
+            , Cmd.none
+            )
+
         GoToPage page ->
             ( model, jumpToPage page )
+
+
+subscriptions : Model -> Sub Msg
+subscriptions _ =
+    BrowserE.onResize
+        (\w h ->
+            WindowResized { width = w, height = h }
+        )
 
 
 headerHeight : Int
@@ -241,16 +296,19 @@ view model =
             , backgroundColor = Nothing
             , shadow = Nothing
             }
+
+        windowWidth : Length
+        windowWidth =
+            minimum 340 fill
     in
     Element.layoutWith { options = [ Element.focusStyle focusStyle ] }
-        [ width fill
-        , height fill
+        [ width windowWidth
         , fontSizeScaled 1
         , Font.family
             [ Font.typeface "Cormorant Garamond"
             , Font.serif
             ]
-        , inFront menu
+        , inFront <| el [ width windowWidth ] menu
         ]
         (viewElement model)
 
@@ -326,40 +384,118 @@ viewPoem =
 
 
 viewIntro : Model -> Element Msg
-viewIntro _ =
+viewIntro { windowSize } =
     let
-        desertImg : Element Msg
-        desertImg =
-            el [ width shrink, height shrink, alignTop ] <|
-                image
-                    [ alignTop
-                    , alignRight
-                    , width <| maximum 400 shrink
-                    , height <| maximum 400 shrink
-                    , rotate <| -pi / 6
+        wideScreen : Bool
+        wideScreen =
+            windowSize.width >= 1170
 
-                    --, scale 0.2
-                    , Border.width <| scaleSpacing 9
-                    , Border.color white
+        desertPhoto : Int -> Element Msg
+        desertPhoto size =
+            mkPhoto size "assets/cropped_desert.jpg" "in the dessert" (pi / 24)
+
+        berlinPhoto : Int -> Element Msg
+        berlinPhoto size =
+            mkPhoto size "assets/berlin.jpg" "in berlin" (-pi / 32)
+
+        mkPhoto : Int -> String -> String -> Float -> Element Msg
+        mkPhoto size src desc angle =
+            el
+                [ width shrink
+                , height shrink
+                , Border.width <| scaleSpacing 9
+                , Border.color white
+                , rotate angle
+                ]
+            <|
+                image
+                    [ width <| maximum size shrink
+                    , height <| maximum size shrink
                     ]
-                    { src = "assets/cropped_desert.jpg"
-                    , description = "in the dessert"
+                    { src = src
+                    , description = desc
                     }
+
+        verticalPhotos : Element Msg
+        verticalPhotos =
+            el
+                [ moveLeft 40
+                , moveUp 200
+                , alignRight
+                , behindContent <|
+                    el
+                        [ moveLeft 80
+                        , moveUp 150
+                        ]
+                    <|
+                        berlinPhoto 200
+                ]
+            <|
+                desertPhoto 200
+
+        smallVerticalPhotos : Element Msg
+        smallVerticalPhotos =
+            el
+                [ centerX
+                , alignTop
+                , moveRight 60
+                , moveUp 20
+                , inFront <|
+                    el
+                        [ moveLeft 120
+                        , moveDown 10
+                        ]
+                    <|
+                        berlinPhoto 150
+                ]
+            <|
+                desertPhoto 150
+
+        horizontalPhotos : Element Msg
+        horizontalPhotos =
+            el
+                [ height <| px 300
+                , centerX
+                , centerY
+                , moveDown 50
+                , moveRight 90
+                , behindContent <|
+                    el
+                        [ moveLeft 180
+                        , moveUp 20
+                        ]
+                    <|
+                        berlinPhoto 200
+                ]
+            <|
+                desertPhoto 200
     in
     column
         [ pageIdAttr Home
         , centerX
         , width fill
-        , height <| minimum 500 fill
+        , height << px <| windowSize.height
+        , paddingScaled 10
         ]
-        [ el [ height << px <| headerHeight ] Element.none
-        , el [ centerX, centerY ] <|
+        [ el [ height <| px headerHeight ] Element.none
+        , el
+            [ centerX
+            , centerY
+            , width fill
+            , below <|
+                if wideScreen then
+                    verticalPhotos
+
+                else
+                    Element.none
+            ]
+          <|
             textColumn
                 [ centerX
+                , centerY
                 , width fill
-                , height fill
                 , spacingScaled 17
-                , paddingScaled 0
+                , paddingScaled 5
                 ]
                 [ paragraph
                     [ Font.center
@@ -372,7 +508,34 @@ viewIntro _ =
                     ]
                     [ text "Engy and Ramses" ]
                 , viewPoem
+                , paragraph
+                    [ Font.center
+                    , fontSizeScaled 6
+                    , Font.family
+                        [ Font.typeface "Tangerine"
+                        , Font.serif
+                        ]
+                    ]
+                    [ text <|
+                        "We would like you to join us "
+                            ++ "in celebrating our marriage"
+                    ]
                 ]
+        , if
+            not wideScreen
+                && windowSize.width
+                >= 445
+                --605
+                && windowSize.height
+                >= 690
+          then
+            el [ width fill ] horizontalPhotos
+
+          else if not wideScreen && windowSize.height >= 700 then
+            el [ width fill ] smallVerticalPhotos
+
+          else
+            Element.none
         ]
 
 
@@ -401,23 +564,21 @@ viewEvents _ =
     let
         officiationEvent : Event
         officiationEvent =
-            MkEvent
-                { name = "Officiation"
-                , datetime = "3 November 2022, 17h - 20h"
-                , location = "Salah Al-Din Al-Ayoubi Citadel"
-                , location2 = "Cairo, Egypt"
-                , mapsUrl = "https://goo.gl/maps/gQcxFyWGz5HKwtM89"
-                }
+            { name = "Officiation"
+            , datetime = "3 November 2022, 17h - 20h"
+            , location = "Salah Al-Din Al-Ayoubi Citadel"
+            , location2 = "Cairo, Egypt"
+            , mapsUrl = "https://goo.gl/maps/gQcxFyWGz5HKwtM89"
+            }
 
         partyEvent : Event
         partyEvent =
-            MkEvent
-                { name = "Party"
-                , datetime = "5 November 2022, 16h - 22h"
-                , location = "Taracina Wedding on the Nile"
-                , location2 = "Giza, Egypt"
-                , mapsUrl = "https://goo.gl/maps/b4oi6ZFC8ouFvU7x6"
-                }
+            { name = "Party"
+            , datetime = "5 November 2022, 16h - 22h"
+            , location = "Taracina Wedding on the Nile"
+            , location2 = "Giza, Egypt"
+            , mapsUrl = "https://goo.gl/maps/b4oi6ZFC8ouFvU7x6"
+            }
 
         viewEvent : Event -> Element Msg
         viewEvent =
@@ -426,6 +587,7 @@ viewEvents _ =
                 , height fill
                 , fontSizeScaled 1
                 , alignBottom
+                , paddingXY (scaleSpacing 11) (scaleSpacing 8)
                 ]
                 << viewEventSummary
     in
@@ -433,14 +595,16 @@ viewEvents _ =
         [ pageIdAttr Events
         , width fill
         , spacingScaled 13
+        , paddingScaled 11
         ]
         [ viewPageTitle Events
         , wrappedRow
-            [ width <| maximum 1100 fill
+            [ width <| maximum maxContentWidth fill
             , height fill
             , centerX
             , paddingScaled 5
-            , spacingScaled 14
+
+            --            , spacingScaled 14
             ]
             [ viewEvent officiationEvent
             , viewEvent partyEvent
@@ -449,9 +613,9 @@ viewEvents _ =
 
 
 viewEventSummary : Event -> Element Msg
-viewEventSummary (MkEvent event) =
+viewEventSummary event =
     column
-        [ width shrink
+        [ width <| maximum 290 fill
         , height shrink
         , Border.color pastelLightBlue
         , Border.width << scaleSpacing <| 0
@@ -463,9 +627,9 @@ viewEventSummary (MkEvent event) =
         ]
         [ el
             [ Font.center
-            , centerX
             , fontSizeScaled 5
             , Font.bold
+            , centerX
             ]
           <|
             text event.name
@@ -498,7 +662,7 @@ viewAccomodation _ =
         content : Element Msg
         content =
             textColumn
-                [ width <| maximum 600 fill
+                [ width <| maximum maxContentTextWidth fill
                 , centerX
                 , Font.center
                 , fontSizeScaled 2
