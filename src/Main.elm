@@ -521,7 +521,12 @@ viewIntro { windowSize } =
                     ]
                     [ paragraph
                         [ Font.center
-                        , fontSizeScaled 11
+                        , fontSizeScaled <|
+                            if windowSize.width >= 380 then
+                                11
+
+                            else
+                                9
                         , Font.color mainTitleColour
                         , Font.bold
                         , Font.family
@@ -551,7 +556,7 @@ viewIntro { windowSize } =
                     not wideScreen
                         && screenSizeLimits windowSize.width
                             windowSize.height
-                            [ ( 445, 765 ), ( 445, 700 ) ]
+                            [ ( 445, 700 ) ]
 
                 showSmallPictures : Bool
                 showSmallPictures =
@@ -559,7 +564,7 @@ viewIntro { windowSize } =
                         && screenSizeLimits
                             windowSize.width
                             windowSize.height
-                            [ ( 374, 690 ), ( 415, 630 ) ]
+                            [ ( 0, 630 ) ]
               in
               if showHorizontalPictures then
                 el [ width fill, alignTop ] horizontalPhotos
