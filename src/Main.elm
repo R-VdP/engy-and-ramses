@@ -8,14 +8,9 @@ import Colours
         ( almostWhite
         , black
         , blackTransparent
-        , darkPastelBlue
         , darkPastelGreen
         , darkPink
         , darkYellow
-        , mintGreen
-        , pastelBlue
-        , pastelLightBlue
-        , pastelLightBlue2
         , white
         )
 import Element
@@ -32,7 +27,6 @@ import Element
         , centerX
         , centerY
         , clip
-        , clipX
         , column
         , el
         , fill
@@ -52,7 +46,6 @@ import Element
         , paragraph
         , px
         , rotate
-        , row
         , shrink
         , text
         , textColumn
@@ -82,7 +75,7 @@ type Page
     = Home
     | Events
     | Accommodation
-    | FAQ
+    | AboutEgypt
 
 
 pageTitle : Page -> String
@@ -97,15 +90,15 @@ pageTitle page =
         Accommodation ->
             "Accomodation"
 
-        FAQ ->
-            "Frequently asked questions"
+        AboutEgypt ->
+            "About Egypt"
 
 
 pageTitleShort : Page -> String
 pageTitleShort page =
     case page of
-        FAQ ->
-            "F.A.Q."
+        AboutEgypt ->
+            "Egypt"
 
         _ ->
             pageTitle page
@@ -126,8 +119,8 @@ pageId page =
                 Accommodation ->
                     "accommodation"
 
-                FAQ ->
-                    "faq"
+                AboutEgypt ->
+                    "about-egypt"
     in
     "page-id-" ++ uriName
 
@@ -160,8 +153,8 @@ type alias Event =
     }
 
 
-backgroundColour : Color
-backgroundColour =
+introBackgroundColour : Color
+introBackgroundColour =
     darkPastelGreen
 
 
@@ -312,6 +305,29 @@ jumpToPage =
         << pageId
 
 
+mkStdPage : Page -> Element Msg -> Element Msg
+mkStdPage page =
+    mkPage page
+        << el
+            [ width fill
+            , centerX
+            , paddingScaled 11
+            ]
+
+
+mkPage : Page -> Element Msg -> Element Msg
+mkPage page content =
+    column
+        [ pageIdAttr page
+        , width fill
+        , paddingScaled 11
+        , spacingScaled 13
+        ]
+        [ viewPageTitle page
+        , content
+        ]
+
+
 view : Model -> Html Msg
 view model =
     let
@@ -354,7 +370,7 @@ menu =
                 [ Home
                 , Events
                 , Accommodation
-                , FAQ
+                , AboutEgypt
                 ]
             )
 
@@ -382,7 +398,7 @@ viewElement model =
         [ viewIntro model
         , viewEvents model
         , viewAccomodation model
-        , viewFAQ model
+        , viewAboutEgypt model
         ]
 
 
@@ -414,6 +430,21 @@ viewIntro { windowSize } =
         wideScreen : Bool
         wideScreen =
             windowSize.width >= 1170
+
+        showHorizontalPictures : Bool
+        showHorizontalPictures =
+            not wideScreen
+                && screenSizeLimits windowSize.width
+                    windowSize.height
+                    [ ( 445, 700 ) ]
+
+        showSmallPictures : Bool
+        showSmallPictures =
+            not wideScreen
+                && screenSizeLimits
+                    windowSize.width
+                    windowSize.height
+                    [ ( 0, 630 ) ]
 
         desertPhoto : Int -> Element Msg
         desertPhoto size =
@@ -464,7 +495,7 @@ viewIntro { windowSize } =
                 [ centerX
                 , alignTop
                 , moveRight 60
-                , moveUp 10
+                , moveDown 30
                 , inFront <|
                     el [ moveLeft 120 ] <|
                         berlinPhoto 150
@@ -478,7 +509,7 @@ viewIntro { windowSize } =
                 [ height <| px 300
                 , centerX
                 , alignTop
-                , moveDown 50
+                , moveDown 70
                 , moveRight 90
                 , behindContent <|
                     el
@@ -490,6 +521,40 @@ viewIntro { windowSize } =
                 ]
             <|
                 desertPhoto 200
+
+        {- The angled bottom of the intro page is made from two rectangles
+           each filling one half of the screen width.
+           They are rotated by an angle around the bottom midpoint of a
+           rectangle at the bottom of the intro page.
+           In this section, we calculate the needed lengths to construct these
+           two rectangles.
+        -}
+        introRectAngle =
+            pi / 32
+
+        introBaseHeight =
+            ceiling <| toFloat windowSize.width * tan introRectAngle / 2
+
+        introRectHeight =
+            (+) 1 << ceiling <| toFloat windowSize.width * sin introRectAngle / 2
+
+        introRectWidth =
+            ceiling <| toFloat windowSize.width / (2 * cos introRectAngle)
+
+        introRectMoveRightDelta =
+            toFloat windowSize.width / 2 * (1 - (tan introRectAngle * sin introRectAngle))
+
+        mkHalfWidthRect : Float -> Float -> Element Msg
+        mkHalfWidthRect rotateAngle mvRightDelta =
+            el
+                [ width <| px introRectWidth
+                , height <| px introRectHeight
+                , Background.color introBackgroundColour
+                , rotate rotateAngle
+                , moveUp <| toFloat introRectHeight / 2
+                , moveRight mvRightDelta
+                ]
+                Element.none
     in
     column [ width fill ]
         [ column
@@ -498,7 +563,7 @@ viewIntro { windowSize } =
             , width fill
             , height << px <| windowSize.height
             , paddingScaled 5
-            , Background.color backgroundColour
+            , Background.color introBackgroundColour
             ]
             [ el [ height <| px headerHeight ] Element.none
             , el
@@ -550,72 +615,23 @@ viewIntro { windowSize } =
                                 ++ "in celebrating our marriage"
                         ]
                     ]
-            , let
-                showHorizontalPictures : Bool
-                showHorizontalPictures =
-                    not wideScreen
-                        && screenSizeLimits windowSize.width
-                            windowSize.height
-                            [ ( 445, 700 ) ]
-
-                showSmallPictures : Bool
-                showSmallPictures =
-                    not wideScreen
-                        && screenSizeLimits
-                            windowSize.width
-                            windowSize.height
-                            [ ( 0, 630 ) ]
-              in
-              if showHorizontalPictures then
-                el [ width fill, alignTop ] horizontalPhotos
+            , if showHorizontalPictures then
+                el [ width fill, centerY ] horizontalPhotos
 
               else if showSmallPictures then
-                el [ width fill, alignTop ] smallPhotos
+                el [ width fill, centerY ] smallPhotos
 
               else
                 Element.none
             ]
-        , let
-            angle =
-                pi / 32
-
-            element_height =
-                ceiling <| toFloat windowSize.width * tan angle / 2
-
-            rectangle_height =
-                (\h -> h + 1) << ceiling <| toFloat windowSize.width * sin angle / 2
-
-            rectangle_width =
-                ceiling <| toFloat windowSize.width / (2 * cos angle)
-
-            moveRightDelta =
-                toFloat windowSize.width / 2 * (1 - (tan angle * sin angle))
-          in
-          el
+        , el
             [ width fill
-            , height <| px element_height
+            , height <| px introBaseHeight
             , clip
             , behindContent <|
-                el
-                    [ width <| px rectangle_width
-                    , height <| px rectangle_height
-                    , Background.color backgroundColour
-                    , rotate angle
-                    , moveUp <| toFloat rectangle_height / 2
-                    ]
-                <|
-                    Element.none
+                mkHalfWidthRect introRectAngle 0
             , behindContent <|
-                el
-                    [ width <| px rectangle_width
-                    , height <| px rectangle_height
-                    , Background.color backgroundColour
-                    , rotate <| negate angle
-                    , moveUp <| toFloat rectangle_height / 2
-                    , moveRight moveRightDelta
-                    ]
-                <|
-                    Element.none
+                mkHalfWidthRect (negate introRectAngle) introRectMoveRightDelta
             ]
             Element.none
         ]
@@ -638,14 +654,6 @@ viewPageTitle page =
         , Font.family [ titleFont ]
         ]
         [ text << pageTitle <| page ]
-
-
-
-{-
-   nonBreakingSpace : String
-   nonBreakingSpace =
-       String.fromChar '\u{00A0}'
--}
 
 
 viewEvents : Model -> Element Msg
@@ -679,14 +687,8 @@ viewEvents _ =
                 ]
                 << viewEventSummary
     in
-    column
-        [ pageIdAttr Events
-        , width fill
-        , spacingScaled 13
-        , paddingScaled 11
-        ]
-        [ viewPageTitle Events
-        , wrappedRow
+    mkPage Events <|
+        wrappedRow
             [ width <| maximum maxContentWidth fill
             , height fill
             , centerX
@@ -695,7 +697,6 @@ viewEvents _ =
             [ viewEvent officiationEvent
             , viewEvent partyEvent
             ]
-        ]
 
 
 viewEventSummary : Event -> Element Msg
@@ -703,7 +704,7 @@ viewEventSummary event =
     column
         [ width <| maximum 290 fill
         , height shrink
-        , Border.color backgroundColour
+        , Border.color introBackgroundColour
         , Border.width << scaleSpacing <| 0
         , Border.solid
         , Border.rounded 3
@@ -715,7 +716,7 @@ viewEventSummary event =
             [ Font.center
             , fontSizeScaled 4
             , Font.bold
-            , Font.color backgroundColour
+            , Font.color introBackgroundColour
             , Font.family [ titleFont ]
             , centerX
             ]
@@ -810,45 +811,21 @@ viewAccomodation _ =
                         , label =
                             el [ Font.underline ] <| text "a list with good options"
                         }
-                    , text " on AirBnb."
+                    , text " on AirBnB."
                     ]
                 ]
     in
-    column
-        [ pageIdAttr Accommodation
-        , width fill
-        , paddingScaled 11
-        , spacingScaled 13
-        ]
-        [ viewPageTitle Accommodation
-        , el
-            [ width fill
-            , paddingScaled 11
-            ]
-            content
-        ]
+    mkStdPage Accommodation content
 
 
-viewFAQ : Model -> Element Msg
-viewFAQ _ =
+viewAboutEgypt : Model -> Element Msg
+viewAboutEgypt _ =
     let
         content : Element Msg
         content =
-            Element.none
+            paragraph [ Font.justify ] [ text "Coming soon..." ]
     in
-    column
-        [ pageIdAttr FAQ
-        , width fill
-        , paddingScaled 11
-        , spacingScaled 13
-        ]
-        [ viewPageTitle FAQ
-        , el
-            [ width fill
-            , paddingScaled 11
-            ]
-            content
-        ]
+    mkStdPage AboutEgypt content
 
 
 poemLine1 : List Int
