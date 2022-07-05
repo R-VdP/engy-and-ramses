@@ -264,18 +264,34 @@ init _ =
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
+    let
+        updateSizeInfo : Model -> Int -> Int -> Model
+        updateSizeInfo { windowSize } newWidth newHeight =
+            case windowSize of
+                { height } ->
+                    let
+                        heightDelta =
+                            abs (height - newHeight)
+
+                        realNewHeight =
+                            if heightDelta <= 100 then
+                                height
+
+                            else
+                                newHeight
+                    in
+                    { windowSize =
+                        { width = newWidth
+                        , height = realNewHeight
+                        }
+                    }
+    in
     case msg of
         NoOp ->
             ( model, Cmd.none )
 
         WindowResized { width, height } ->
-            ( { windowSize =
-                    { width = width
-                    , height = height
-                    }
-              }
-            , Cmd.none
-            )
+            ( updateSizeInfo model width height, Cmd.none )
 
         GoToPage page ->
             ( model, jumpToPage page )
@@ -305,13 +321,19 @@ jumpToPage =
         << pageId
 
 
-mkStdPage : Page -> Element Msg -> Element Msg
-mkStdPage page =
+mkStdTxtPage : Page -> List (Element Msg) -> Element Msg
+mkStdTxtPage page =
     mkPage page
         << el
             [ width fill
             , centerX
             , paddingScaled 11
+            ]
+        << textColumn
+            [ width <| maximum maxContentTextWidth fill
+            , centerX
+            , Font.justify
+            , spacingScaled 15
             ]
 
 
@@ -748,56 +770,50 @@ viewEventSummary event =
 viewAccomodation : Model -> Element Msg
 viewAccomodation _ =
     let
-        content : Element Msg
+        content : List (Element Msg)
         content =
-            textColumn
-                [ width <| maximum maxContentTextWidth fill
-                , centerX
-                , Font.justify
-                , spacingScaled 15
-                ]
-                [ paragraph []
-                    [ text """
+            [ paragraph []
+                [ text """
                       The wedding will take place in two different locations in
                       Cairo, Egypt.
                       """
-                    ]
-                , paragraph []
-                    [ text """
+                ]
+            , paragraph []
+                [ text """
                       For guests travelling from abroad, we recommend to arrive
                       in the weekend of 29/11 and to stay until 06/11.
                       During this week, we will organise some day trips to
                       discover Cairo and the many historical sites surrounding it.
                       """
-                    ]
-                , paragraph []
-                    [ text """
+                ]
+            , paragraph []
+                [ text """
                       In terms of accommodation, we recommend to stay in the
                       Maadi area in Cairo.
                       This green, calm and central area is ideally located both
                       to attend the wedding and to discover downtown Cairo.
                       """
-                    ]
-                , paragraph []
-                    [ text """
+                ]
+            , paragraph []
+                [ text """
                       If you wish to stay in a hotel, we can recommend either the
                       """
-                    , text " "
-                    , newTabLink []
-                        { url = "https://goo.gl/maps/RVxAZFCCAXZoAxon9"
-                        , label =
-                            el [ Font.underline ] <| text "Holiday Inn"
-                        }
-                    , text " or the "
-                    , newTabLink []
-                        { url = "https://goo.gl/maps/7hjch9G8Z6vj39dx7"
-                        , label =
-                            el [ Font.underline ] <| text "Pearl"
-                        }
-                    , text " hotels."
-                    ]
-                , paragraph []
-                    [ text """
+                , text " "
+                , newTabLink []
+                    { url = "https://goo.gl/maps/RVxAZFCCAXZoAxon9"
+                    , label =
+                        el [ Font.underline ] <| text "Holiday Inn"
+                    }
+                , text " or the "
+                , newTabLink []
+                    { url = "https://goo.gl/maps/7hjch9G8Z6vj39dx7"
+                    , label =
+                        el [ Font.underline ] <| text "Pearl"
+                    }
+                , text " hotels."
+                ]
+            , paragraph []
+                [ text """
                       Alternatively, you can also rent a room or apartment on
                       AirBnB.
                       There are many good options in Cairo, but if you do not
@@ -805,17 +821,17 @@ viewAccomodation _ =
                       before booking.
                       We also created
                       """
-                    , text " "
-                    , newTabLink []
-                        { url = "https://www.airbnb.fr/wishlists/v/1066413648"
-                        , label =
-                            el [ Font.underline ] <| text "a list with good options"
-                        }
-                    , text " on AirBnB."
-                    ]
+                , text " "
+                , newTabLink []
+                    { url = "https://www.airbnb.fr/wishlists/v/1066413648"
+                    , label =
+                        el [ Font.underline ] <| text "a list with good options"
+                    }
+                , text " on AirBnB."
                 ]
+            ]
     in
-    mkStdPage Accommodation content
+    mkStdTxtPage Accommodation content
 
 
 viewAboutEgypt : Model -> Element Msg
@@ -823,9 +839,10 @@ viewAboutEgypt _ =
     let
         content : Element Msg
         content =
-            paragraph [ Font.justify ] [ text "Coming soon..." ]
+            el [ width fill, centerX ] <|
+                paragraph [ Font.justify ] [ text "Coming soon..." ]
     in
-    mkStdPage AboutEgypt content
+    mkStdTxtPage AboutEgypt [ content ]
 
 
 poemLine1 : List Int
