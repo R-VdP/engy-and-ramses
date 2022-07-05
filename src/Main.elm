@@ -36,7 +36,6 @@ import Element
         , inFront
         , maximum
         , minimum
-        , moveDown
         , moveLeft
         , moveRight
         , moveUp
@@ -466,7 +465,7 @@ viewIntro { windowSize } =
                 && screenSizeLimits
                     windowSize.width
                     windowSize.height
-                    [ ( 0, 630 ) ]
+                    [ ( 0, 690 ), ( 550, 650 ) ]
 
         desertPhoto : Int -> Element Msg
         desertPhoto size =
@@ -515,11 +514,11 @@ viewIntro { windowSize } =
         smallPhotos =
             el
                 [ centerX
-                , alignTop
+                , centerY
                 , moveRight 60
-                , moveDown 30
+                , moveUp 10
                 , inFront <|
-                    el [ moveLeft 120 ] <|
+                    el [ moveUp 40, moveLeft 120 ] <|
                         berlinPhoto 150
                 ]
             <|
@@ -528,15 +527,14 @@ viewIntro { windowSize } =
         horizontalPhotos : Element Msg
         horizontalPhotos =
             el
-                [ height <| px 300
-                , centerX
-                , alignTop
-                , moveDown 70
+                [ centerX
+                , centerY
+                , moveUp 10
                 , moveRight 90
                 , behindContent <|
                     el
                         [ moveLeft 180
-                        , moveUp 20
+                        , moveUp 30
                         ]
                     <|
                         berlinPhoto 200
@@ -637,11 +635,16 @@ viewIntro { windowSize } =
                                 ++ "in celebrating our marriage"
                         ]
                     ]
+
+            -- We pin the pictures to the bottom.
+            -- Alternatively, we can set the textColumn and this element
+            -- to height fill and center the pictures in their surrounding
+            -- element.
             , if showHorizontalPictures then
-                el [ width fill, centerY ] horizontalPhotos
+                el [ width fill, alignBottom ] horizontalPhotos
 
               else if showSmallPictures then
-                el [ width fill, centerY ] smallPhotos
+                el [ width fill, alignBottom ] smallPhotos
 
               else
                 Element.none
