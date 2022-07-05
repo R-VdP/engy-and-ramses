@@ -202,7 +202,7 @@ introFont =
 
 arabicFont : Font
 arabicFont =
-    Font.typeface "Amiri"
+    Font.typeface "Gulzar"
 
 
 scaleFontSize : Int -> Int
@@ -327,7 +327,7 @@ view model =
     in
     Element.layoutWith { options = [ Element.focusStyle focusStyle ] }
         [ width windowWidth
-        , fontSizeScaled 1
+        , fontSizeScaled -1
         , Font.family
             [ mainFont
             , Font.serif
@@ -673,7 +673,6 @@ viewEvents _ =
             el
                 [ width fill
                 , height fill
-                , fontSizeScaled 1
                 , alignBottom
                 , paddingXY (scaleSpacing 11) (scaleSpacing 8)
                 ]
@@ -691,8 +690,6 @@ viewEvents _ =
             , height fill
             , centerX
             , paddingScaled 5
-
-            --            , spacingScaled 14
             ]
             [ viewEvent officiationEvent
             , viewEvent partyEvent
@@ -715,9 +712,10 @@ viewEventSummary event =
         ]
         [ el
             [ Font.center
-            , fontSizeScaled 5
+            , fontSizeScaled 4
             , Font.bold
             , Font.color backgroundColour
+            , Font.family [ titleFont ]
             , centerX
             ]
           <|
@@ -753,8 +751,7 @@ viewAccomodation _ =
             textColumn
                 [ width <| maximum maxContentTextWidth fill
                 , centerX
-                , Font.center
-                , fontSizeScaled 2
+                , Font.justify
                 , spacingScaled 15
                 ]
                 [ paragraph []
