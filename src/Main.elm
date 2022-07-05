@@ -464,12 +464,9 @@ viewIntro { windowSize } =
                 [ centerX
                 , alignTop
                 , moveRight 60
+                , moveUp 10
                 , inFront <|
-                    el
-                        [ moveLeft 120
-                        , moveDown 10
-                        ]
-                    <|
+                    el [ moveLeft 120 ] <|
                         berlinPhoto 150
                 ]
             <|
@@ -500,7 +497,7 @@ viewIntro { windowSize } =
             , centerX
             , width fill
             , height << px <| windowSize.height
-            , paddingScaled 10
+            , paddingScaled 5
             , Background.color backgroundColour
             ]
             [ el [ height <| px headerHeight ] Element.none
@@ -521,7 +518,6 @@ viewIntro { windowSize } =
                     , centerY
                     , width fill
                     , spacingScaled 17
-                    , paddingScaled 5
                     ]
                     [ paragraph
                         [ Font.center
@@ -555,7 +551,7 @@ viewIntro { windowSize } =
                     not wideScreen
                         && screenSizeLimits windowSize.width
                             windowSize.height
-                            [ ( 445, 765 ), ( 445 {- 585 -}, 700 ) ]
+                            [ ( 445, 765 ), ( 445, 700 ) ]
 
                 showSmallPictures : Bool
                 showSmallPictures =
