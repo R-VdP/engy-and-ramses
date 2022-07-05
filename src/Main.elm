@@ -6,6 +6,7 @@ import Browser.Events as BrowserE
 import Colours
     exposing
         ( almostWhite
+        , black
         , blackTransparent
         , darkPastelBlue
         , darkPastelGreen
@@ -30,6 +31,8 @@ import Element
         , below
         , centerX
         , centerY
+        , clip
+        , clipX
         , column
         , el
         , fill
@@ -49,6 +52,7 @@ import Element
         , paragraph
         , px
         , rotate
+        , row
         , shrink
         , text
         , textColumn
@@ -161,6 +165,16 @@ backgroundColour =
     darkPastelGreen
 
 
+mainTitleColour : Color
+mainTitleColour =
+    darkYellow
+
+
+subtitleColour : Color
+subtitleColour =
+    almostWhite
+
+
 titleColour : Color
 titleColour =
     darkPink
@@ -168,17 +182,22 @@ titleColour =
 
 textColour : Color
 textColour =
-    darkYellow
+    black
 
 
 mainFont : Font
 mainFont =
-    Font.typeface "Cormorant Garamond"
+    Font.typeface "Arima Madurai"
+
+
+titleFont : Font
+titleFont =
+    Font.typeface "Dancing Script"
 
 
 introFont : Font
 introFont =
-    Font.typeface "Twinkle Star"
+    Font.typeface "The Nautigal"
 
 
 arabicFont : Font
@@ -357,7 +376,7 @@ viewElement model =
     column
         [ width fill
         , spacingScaled 14
-        , Background.color backgroundColour
+        , Background.color white
         , Font.color textColour
         ]
         [ viewIntro model
@@ -381,7 +400,7 @@ viewPoem =
         , centerX
         , fontSizeScaled 3
         , Font.family [ arabicFont ]
-        , Font.color almostWhite
+        , Font.color subtitleColour
         , spacingScaled 13
         ]
         [ lineToParagraph poemLine1
@@ -445,11 +464,10 @@ viewIntro { windowSize } =
                 [ centerX
                 , alignTop
                 , moveRight 60
-                , moveDown 10
                 , inFront <|
                     el
                         [ moveLeft 120
-                        , moveDown 20
+                        , moveDown 10
                         ]
                     <|
                         berlinPhoto 150
@@ -462,7 +480,7 @@ viewIntro { windowSize } =
             el
                 [ height <| px 300
                 , centerX
-                , centerY
+                , alignTop
                 , moveDown 50
                 , moveRight 90
                 , behindContent <|
@@ -476,80 +494,135 @@ viewIntro { windowSize } =
             <|
                 desertPhoto 200
     in
-    column
-        [ pageIdAttr Home
-        , centerX
-        , width fill
-        , height << px <| windowSize.height
-        , paddingScaled 10
-        ]
-        [ el [ height <| px headerHeight ] Element.none
-        , el
-            [ centerX
-            , centerY
+    column [ width fill ]
+        [ column
+            [ pageIdAttr Home
+            , centerX
             , width fill
-            , below <|
-                if wideScreen then
-                    verticalPhotos
-
-                else
-                    Element.none
+            , height << px <| windowSize.height
+            , paddingScaled 10
+            , Background.color backgroundColour
             ]
-          <|
-            textColumn
+            [ el [ height <| px headerHeight ] Element.none
+            , el
                 [ centerX
                 , centerY
                 , width fill
-                , spacingScaled 17
-                , paddingScaled 5
+                , below <|
+                    if wideScreen then
+                        verticalPhotos
+
+                    else
+                        Element.none
                 ]
-                [ paragraph
-                    [ Font.center
-                    , fontSizeScaled 11
-                    , Font.color titleColour
-                    , Font.bold
-                    , Font.family
-                        [ introFont
-                        , Font.serif
+              <|
+                textColumn
+                    [ centerX
+                    , centerY
+                    , width fill
+                    , spacingScaled 17
+                    , paddingScaled 5
+                    ]
+                    [ paragraph
+                        [ Font.center
+                        , fontSizeScaled 11
+                        , Font.color mainTitleColour
+                        , Font.bold
+                        , Font.family
+                            [ introFont
+                            , Font.serif
+                            ]
+                        ]
+                        [ text "Engy & Ramses" ]
+                    , viewPoem
+                    , paragraph
+                        [ Font.center
+                        , fontSizeScaled 3
+                        , Font.color subtitleColour
+                        , Font.family
+                            [ titleFont
+                            , Font.serif
+                            ]
+                        ]
+                        [ text <|
+                            "We would like you to join us "
+                                ++ "in celebrating our marriage"
                         ]
                     ]
-                    [ text "Engy and Ramses" ]
-                , viewPoem
-                , paragraph
-                    [ Font.center
-                    , fontSizeScaled 3
-                    , Font.family
-                        [ introFont
-                        , Font.serif
-                        ]
-                    ]
-                    [ text <|
-                        "We would like you to join us "
-                            ++ "in celebrating our marriage"
-                    ]
-                ]
-        , if
-            not wideScreen
-                && windowSize.width
-                >= 445
-                --605
-                && windowSize.height
-                >= 690
-          then
-            el [ width fill ] horizontalPhotos
+            , let
+                showHorizontalPictures : Bool
+                showHorizontalPictures =
+                    not wideScreen
+                        && screenSizeLimits windowSize.width
+                            windowSize.height
+                            [ ( 445, 765 ), ( 445 {- 585 -}, 700 ) ]
 
-          else if
-            not wideScreen
-                && windowSize.width
-                >= 375
-                && windowSize.height
-                >= 650
-          then
-            el [ width fill ] smallPhotos
+                showSmallPictures : Bool
+                showSmallPictures =
+                    not wideScreen
+                        && screenSizeLimits
+                            windowSize.width
+                            windowSize.height
+                            [ ( 374, 690 ), ( 415, 630 ) ]
+              in
+              if showHorizontalPictures then
+                el [ width fill, alignTop ] horizontalPhotos
 
-          else
+              else if showSmallPictures then
+                el [ width fill, alignTop ] smallPhotos
+
+              else
+                Element.none
+            ]
+        , let
+            angle =
+                pi / 32
+
+            element_height =
+                ceiling <| toFloat windowSize.width * tan angle / 2
+
+            rectangle_height =
+                (\h -> h + 1) << ceiling <| toFloat windowSize.width * sin angle / 2
+
+            rectangle_width =
+                ceiling <| toFloat windowSize.width / (2 * cos angle)
+
+            moveRightDelta =
+                toFloat windowSize.width / 2 * (1 - (tan angle * sin angle))
+          in
+          el
+            [ width fill
+            , height <| px element_height
+            , clip
+            , behindContent <|
+                el
+                    [ width <| px rectangle_width
+                    , height <| px rectangle_height
+                    , Background.color backgroundColour
+                    , rotate angle
+                    , moveUp <| toFloat rectangle_height / 2
+                    ]
+                <|
+                    Element.none
+            , behindContent <|
+                el
+                    [ width <| px rectangle_width
+                    , height <| px rectangle_height
+                    , Background.color backgroundColour
+                    , rotate <| negate angle
+                    , moveUp <| toFloat rectangle_height / 2
+                    , moveRight moveRightDelta
+                    ]
+                <|
+                    Element.none
+            ]
             Element.none
         ]
+
+
+screenSizeLimits : Int -> Int -> List ( Int, Int ) -> Bool
+screenSizeLimits windowWidth windowHeight =
+    List.any (\( w, h ) -> windowWidth >= w && windowHeight >= h)
 
 
 viewPageTitle : Page -> Element Msg
@@ -561,6 +634,7 @@ viewPageTitle page =
         , Font.bold
         , Font.center
         , Font.color titleColour
+        , Font.family [ titleFont ]
         ]
         [ text << pageTitle <| page ]
 
@@ -631,7 +705,7 @@ viewEventSummary event =
     column
         [ width <| maximum 290 fill
         , height shrink
-        , Border.color pastelLightBlue
+        , Border.color backgroundColour
         , Border.width << scaleSpacing <| 0
         , Border.solid
         , Border.rounded 3
@@ -643,6 +717,7 @@ viewEventSummary event =
             [ Font.center
             , fontSizeScaled 5
             , Font.bold
+            , Font.color backgroundColour
             , centerX
             ]
           <|
@@ -660,8 +735,8 @@ viewEventSummary event =
                 el
                     [ centerX
                     , paddingScaled 6
-                    , Background.color textColour
-                    , Font.color pastelBlue
+                    , Background.color darkYellow
+                    , Font.color textColour
                     , Font.regular
                     ]
                 <|
@@ -729,7 +804,15 @@ viewAccomodation _ =
                       There are many good options in Cairo, but if you do not
                       know the city, you can best confirm the location with us
                       before booking.
+                      We also created
                       """
+                    , text " "
+                    , newTabLink []
+                        { url = "https://www.airbnb.fr/wishlists/v/1066413648"
+                        , label =
+                            el [ Font.underline ] <| text "a list with good options"
+                        }
+                    , text " on AirBnb."
                     ]
                 ]
     in
