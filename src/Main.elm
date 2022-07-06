@@ -23,7 +23,6 @@ import Element
         , alignRight
         , alignTop
         , behindContent
-        , below
         , centerX
         , centerY
         , clip
@@ -106,24 +105,8 @@ pageTitleShort page =
 
 
 pageId : Page -> String
-pageId page =
-    let
-        uriName : String
-        uriName =
-            case page of
-                Home ->
-                    "home"
-
-                Events ->
-                    "events"
-
-                Accommodation ->
-                    "accommodation"
-
-                AboutEgypt ->
-                    "about-egypt"
-    in
-    "page-id-" ++ uriName
+pageId =
+    (++) "page-id-" << String.toLower << String.replace " " "-" << pageTitle
 
 
 pageIdAttr : Page -> Attribute Msg
@@ -327,7 +310,6 @@ mkStdTxtPage page =
     mkPage page
         << el
             [ width fill
-            , centerX
             , paddingScaled 11
             ]
         << textColumn
@@ -349,6 +331,19 @@ mkPage page content =
         [ viewPageTitle page
         , content
         ]
+
+
+viewPageTitle : Page -> Element Msg
+viewPageTitle page =
+    paragraph
+        [ alignTop
+        , fontSizeScaled 7
+        , Font.bold
+        , Font.center
+        , Font.color titleColour
+        , Font.family [ titleFont ]
+        ]
+        [ text << pageTitle <| page ]
 
 
 view : Model -> Html Msg
@@ -436,7 +431,6 @@ viewPoem =
     in
     textColumn
         [ width fill
-        , centerX
         , fontSizeScaled 3
         , Font.family [ arabicFont ]
         , Font.color subtitleColour
@@ -574,19 +568,16 @@ viewIntro { windowSize } =
                 ]
                 Element.none
     in
-    column [ width fill ]
+    column [ pageIdAttr Home, width fill ]
         [ column
-            [ pageIdAttr Home
-            , centerX
-            , width fill
+            [ width fill
             , height << px <| windowSize.height
             , paddingScaled 5
             , Background.color introBackgroundColour
             ]
             [ el [ height <| px headerHeight ] Element.none
             , el
-                [ centerX
-                , centerY
+                [ centerY
                 , width fill
                 , height <| fillPortion 3
                 , behindContent <|
@@ -598,8 +589,7 @@ viewIntro { windowSize } =
                 ]
               <|
                 textColumn
-                    [ centerX
-                    , centerY
+                    [ centerY
                     , width fill
                     , spacingScaled 17
                     ]
@@ -666,20 +656,6 @@ screenSizeLimits windowWidth windowHeight =
     List.any (\( w, h ) -> windowWidth >= w && windowHeight >= h)
 
 
-viewPageTitle : Page -> Element Msg
-viewPageTitle page =
-    paragraph
-        [ alignTop
-        , centerX
-        , fontSizeScaled 7
-        , Font.bold
-        , Font.center
-        , Font.color titleColour
-        , Font.family [ titleFont ]
-        ]
-        [ text << pageTitle <| page ]
-
-
 viewEvents : Model -> Element Msg
 viewEvents _ =
     let
@@ -705,8 +681,6 @@ viewEvents _ =
         viewEvent =
             el
                 [ width fill
-                , height fill
-                , alignBottom
                 , paddingXY (scaleSpacing 11) (scaleSpacing 8)
                 ]
                 << viewEventSummary
@@ -714,7 +688,6 @@ viewEvents _ =
     mkPage Events <|
         wrappedRow
             [ width <| maximum maxContentWidth fill
-            , height fill
             , centerX
             , paddingScaled 5
             ]
@@ -737,8 +710,7 @@ viewEventSummary event =
         , centerX
         ]
         [ el
-            [ Font.center
-            , fontSizeScaled 4
+            [ fontSizeScaled 4
             , Font.bold
             , Font.color introBackgroundColour
             , Font.family [ titleFont ]
@@ -746,9 +718,9 @@ viewEventSummary event =
             ]
           <|
             text event.name
-        , el [ Font.center, centerX ] <| text event.datetime
-        , el [ Font.center, centerX ] <| text event.location
-        , el [ Font.center, centerX ] <| text event.location2
+        , el [ centerX ] <| text event.datetime
+        , el [ centerX ] <| text event.location
+        , el [ centerX ] <| text event.location2
         , newTabLink
             [ Border.width 0
             , alignBottom
@@ -839,12 +811,11 @@ viewAccomodation _ =
 viewAboutEgypt : Model -> Element Msg
 viewAboutEgypt _ =
     let
-        content : Element Msg
+        content : List (Element Msg)
         content =
-            el [ width fill, centerX ] <|
-                paragraph [ Font.justify ] [ text "Coming soon..." ]
+            [ paragraph [] [ text "Coming soon..." ] ]
     in
-    mkStdTxtPage AboutEgypt [ content ]
+    mkStdTxtPage AboutEgypt content
 
 
 poemLine1 : List Int
