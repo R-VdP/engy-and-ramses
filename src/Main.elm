@@ -30,12 +30,14 @@ import Element
         , column
         , el
         , fill
+        , fillPortion
         , height
         , htmlAttribute
         , image
         , inFront
         , maximum
         , minimum
+        , moveDown
         , moveLeft
         , moveRight
         , moveUp
@@ -448,24 +450,26 @@ viewPoem =
 viewIntro : Model -> Element Msg
 viewIntro { windowSize } =
     let
-        wideScreen : Bool
-        wideScreen =
-            windowSize.width >= 1170
+        showVerticalPictures : Bool
+        showVerticalPictures =
+            screenSizeLimits windowSize.width
+                windowSize.height
+                [ ( 1170, 430 ) ]
 
         showHorizontalPictures : Bool
         showHorizontalPictures =
-            not wideScreen
+            not showVerticalPictures
                 && screenSizeLimits windowSize.width
                     windowSize.height
                     [ ( 445, 700 ) ]
 
         showSmallPictures : Bool
         showSmallPictures =
-            not wideScreen
+            not showVerticalPictures
                 && screenSizeLimits
                     windowSize.width
                     windowSize.height
-                    [ ( 0, 690 ), ( 550, 650 ) ]
+                    [ ( 0, 660 ), ( 550, 630 ) ]
 
         desertPhoto : Int -> Element Msg
         desertPhoto size =
@@ -496,15 +500,13 @@ viewIntro { windowSize } =
         verticalPhotos : Element Msg
         verticalPhotos =
             el
-                [ moveLeft 40
-                , moveUp 200
+                [ centerX
+                , centerY
+                , moveLeft 40
+                , moveDown 70
                 , alignRight
                 , behindContent <|
-                    el
-                        [ moveLeft 80
-                        , moveUp 150
-                        ]
-                    <|
+                    el [ moveUp 150, moveLeft 80 ] <|
                         berlinPhoto 200
                 ]
             <|
@@ -518,7 +520,7 @@ viewIntro { windowSize } =
                 , moveRight 60
                 , moveUp 10
                 , inFront <|
-                    el [ moveUp 40, moveLeft 120 ] <|
+                    el [ moveUp 10, moveLeft 130 ] <|
                         berlinPhoto 150
                 ]
             <|
@@ -532,11 +534,7 @@ viewIntro { windowSize } =
                 , moveUp 10
                 , moveRight 90
                 , behindContent <|
-                    el
-                        [ moveLeft 180
-                        , moveUp 30
-                        ]
-                    <|
+                    el [ moveUp 30, moveLeft 180 ] <|
                         berlinPhoto 200
                 ]
             <|
@@ -590,8 +588,9 @@ viewIntro { windowSize } =
                 [ centerX
                 , centerY
                 , width fill
-                , below <|
-                    if wideScreen then
+                , height <| fillPortion 3
+                , behindContent <|
+                    if showVerticalPictures then
                         verticalPhotos
 
                     else
@@ -641,10 +640,10 @@ viewIntro { windowSize } =
             -- to height fill and center the pictures in their surrounding
             -- element.
             , if showHorizontalPictures then
-                el [ width fill, alignBottom ] horizontalPhotos
+                el [ width fill, height <| fillPortion 1, paddingScaled 8 ] horizontalPhotos
 
               else if showSmallPictures then
-                el [ width fill, alignBottom ] smallPhotos
+                el [ width fill, height <| fillPortion 1, paddingScaled 8 ] smallPhotos
 
               else
                 Element.none
