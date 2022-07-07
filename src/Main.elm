@@ -480,6 +480,7 @@ viewIntro { windowSize } =
                 , height shrink
                 , Border.width <| scaleSpacing 9
                 , Border.color white
+                , Background.color white
                 , rotate angle
                 ]
             <|
