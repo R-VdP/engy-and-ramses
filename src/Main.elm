@@ -296,7 +296,7 @@ headerHeight =
 
 jumpToPage : Page -> Cmd Msg
 jumpToPage =
-    Task.attempt (\_ -> NoOp)
+    Task.attempt (always NoOp)
         << Task.andThen
             (\info ->
                 Dom.setViewport info.element.x (info.element.y - toFloat headerHeight)
@@ -436,9 +436,8 @@ viewPoem =
         , Font.color subtitleColour
         , spacingScaled 13
         ]
-        [ lineToParagraph poemLine1
-        , lineToParagraph poemLine2
-        ]
+    <|
+        List.map lineToParagraph poemLines
 
 
 viewIntro : Model -> Element Msg
@@ -820,71 +819,68 @@ viewAboutEgypt _ =
     mkStdTxtPage AboutEgypt content
 
 
-poemLine1 : List Int
-poemLine1 =
-    [ 0x0625
-    , 0x0646
-    , 0x20
-    , 0x063A
-    , 0x0627
-    , 0x0628
-    , 0x064E
-    , 0x20
-    , 0x0639
-    , 0x0646
-    , 0x064A
-    , 0x20
-    , 0x0641
-    , 0x0627
-    , 0x0644
-    , 0x0631
-    , 0x0648
-    , 0x062D
-    , 0x064F
-    , 0x20
-    , 0x0645
-    , 0x064E
-    , 0x0633
-    , 0x0643
-    , 0x0646
-    , 0x0647
-    , 0x064F
-    ]
-
-
-poemLine2 : List Int
-poemLine2 =
-    [ 0x0A
-    , 0x0645
-    , 0x064E
-    , 0x0646
-    , 0x20
-    , 0x064A
-    , 0x0633
-    , 0x0643
-    , 0x0646
-    , 0x064F
-    , 0x20
-    , 0x0627
-    , 0x0644
-    , 0x0631
-    , 0x0648
-    , 0x062D
-    , 0x20
-    , 0x0643
-    , 0x064A
-    , 0x0641
-    , 0x20
-    , 0x0627
-    , 0x0644
-    , 0x0642
-    , 0x0644
-    , 0x0628
-    , 0x064F
-    , 0x20
-    , 0x064A
-    , 0x0646
-    , 0x0633
-    , 0x0627
-    , 0x0647
+poemLines : List (List Int)
+poemLines =
+    [ [ 0x0625
+      , 0x0646
+      , 0x20
+      , 0x063A
+      , 0x0627
+      , 0x0628
+      , 0x064E
+      , 0x20
+      , 0x0639
+      , 0x0646
+      , 0x064A
+      , 0x20
+      , 0x0641
+      , 0x0627
+      , 0x0644
+      , 0x0631
+      , 0x0648
+      , 0x062D
+      , 0x064F
+      , 0x20
+      , 0x0645
+      , 0x064E
+      , 0x0633
+      , 0x0643
+      , 0x0646
+      , 0x0647
+      , 0x064F
+      ]
+    , [ 0x0A
+      , 0x0645
+      , 0x064E
+      , 0x0646
+      , 0x20
+      , 0x064A
+      , 0x0633
+      , 0x0643
+      , 0x0646
+      , 0x064F
+      , 0x20
+      , 0x0627
+      , 0x0644
+      , 0x0631
+      , 0x0648
+      , 0x062D
+      , 0x20
+      , 0x0643
+      , 0x064A
+      , 0x0641
+      , 0x20
+      , 0x0627
+      , 0x0644
+      , 0x0642
+      , 0x0644
+      , 0x0628
+      , 0x064F
+      , 0x20
+      , 0x064A
+      , 0x0646
+      , 0x0633
+      , 0x0627
+      , 0x0647
+      ]
     ]
