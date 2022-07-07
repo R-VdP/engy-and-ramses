@@ -219,7 +219,7 @@ pageMenuButtonPadding =
 
 maxContentWidth : Int
 maxContentWidth =
-    900
+    800
 
 
 maxContentTextWidth : Int
@@ -690,7 +690,6 @@ viewEvents _ =
         wrappedRow
             [ width <| maximum maxContentWidth fill
             , centerX
-            , paddingScaled 5
             ]
             [ viewEvent officiationEvent
             , viewEvent partyEvent
@@ -707,6 +706,8 @@ viewEventSummary event =
         , Border.solid
         , Border.rounded 3
         , spacingScaled 11
+
+        -- TODO can we replace this by spacing on the row containing these?
         , paddingScaled 5
         , centerX
         ]
