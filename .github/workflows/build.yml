@@ -50,7 +50,9 @@ jobs:
           git config user.name github-actions
           git config user.email github-actions@github.com
           git add .
-          git commit -m "generated"
+          # commit exits with an error when there are no changes
+          # we will simply ignore this
+          git commit -m "Deploy new production site from commit ${{ github.sha }}" || true
           git push
         working-directory: gh-pages
 
