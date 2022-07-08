@@ -57,7 +57,7 @@ import Element.Border as Border
 import Element.Font as Font exposing (Font)
 import Element.Input as Input
 import Html exposing (Html)
-import Html.Attributes exposing (id)
+import Html.Attributes exposing (id, style)
 import Task
 
 
@@ -534,39 +534,8 @@ viewIntro { windowSize } =
             <|
                 desertPhoto 200
 
-        {- The angled bottom of the intro page is made from two rectangles
-           each filling one half of the screen width.
-           They are rotated by an angle around the bottom midpoint of a
-           rectangle at the bottom of the intro page.
-           In this section, we calculate the needed lengths to construct these
-           two rectangles.
-        -}
-        introRectAngle =
-            pi / 32
-
         introBaseHeight =
-            ceiling <| toFloat windowSize.width * tan introRectAngle / 2
-
-        introRectHeight =
-            (+) 1 << ceiling <| toFloat windowSize.width * sin introRectAngle / 2
-
-        introRectWidth =
-            ceiling <| toFloat windowSize.width / (2 * cos introRectAngle)
-
-        introRectMoveRightDelta =
-            toFloat windowSize.width / 2 * (1 - (tan introRectAngle * sin introRectAngle))
-
-        mkHalfWidthRect : Float -> Float -> Element Msg
-        mkHalfWidthRect rotateAngle mvRightDelta =
-            el
-                [ width <| px introRectWidth
-                , height <| px introRectHeight
-                , Background.color introBackgroundColour
-                , rotate rotateAngle
-                , moveUp <| toFloat introRectHeight / 2
-                , moveRight mvRightDelta
-                ]
-                Element.none
+            ceiling <| toFloat windowSize.width * tan (pi / 32) / 2
     in
     column [ pageIdAttr Home, width fill ]
         [ column
@@ -641,11 +610,8 @@ viewIntro { windowSize } =
         , el
             [ width fill
             , height <| px introBaseHeight
-            , clip
-            , behindContent <|
-                mkHalfWidthRect introRectAngle 0
-            , behindContent <|
-                mkHalfWidthRect (negate introRectAngle) introRectMoveRightDelta
+            , Background.color introBackgroundColour
+            , htmlAttribute <| style "clip-path" "polygon(0 0, 50% 100%, 100% 0)"
             ]
             Element.none
         ]
