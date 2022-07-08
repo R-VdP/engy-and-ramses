@@ -1,0 +1,55 @@
+name: Build and publish
+
+on:
+  workflow_dispatch:
+
+  push:
+    branches:
+      - master
+
+jobs:
+
+  build-and-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the main repo
+        uses: "actions/checkout@v3"
+
+      - name: Install the Nix package manager
+        uses: cachix/install-nix-action@master
+        with:
+          nix_path: nixpkgs=https://nix-channel-redirect.ocb.msf.org/nixexprs.tar.xz
+
+      - name: Build the application
+        run: >-
+          nix-build
+          --arg production true
+          --out-link generated-site
+
+      - name: Checkout the gh-pages branch repo
+        uses: "actions/checkout@v3"
+        with:
+          ref: 'gh-pages'
+          path: 'gh-pages'
+
+      - name: Move the generated site in place
+        run: |
+          rsync \
+            --archive \
+            --verbose \
+            --delete \
+            --ignore-times \
+            --chmod=u=rwX \
+            generated-site/ gh-pages/
+
+          touch docs/.nojekyll
+
+      - name: Push the changes
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add .
+          git commit -m "generated"
+          git push
+        working-directory: gh-pages
+
