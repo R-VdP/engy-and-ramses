@@ -38,11 +38,12 @@ jobs:
             --archive \
             --verbose \
             --delete \
+            --exclude=.git
             --ignore-times \
             --chmod=u=rwX \
             generated-site/ gh-pages/
 
-          touch docs/.nojekyll
+          touch gh-pages/.nojekyll
 
       - name: Push the changes
         run: |
