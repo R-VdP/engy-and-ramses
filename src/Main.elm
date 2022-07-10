@@ -25,7 +25,6 @@ import Element
         , behindContent
         , centerX
         , centerY
-        , clip
         , column
         , el
         , fill
@@ -248,34 +247,12 @@ init _ =
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    let
-        updateSizeInfo : Model -> Int -> Int -> Model
-        updateSizeInfo { windowSize } newWidth newHeight =
-            case windowSize of
-                { height } ->
-                    let
-                        heightDelta =
-                            abs (height - newHeight)
-
-                        realNewHeight =
-                            if heightDelta <= 100 then
-                                height
-
-                            else
-                                newHeight
-                    in
-                    { windowSize =
-                        { width = newWidth
-                        , height = realNewHeight
-                        }
-                    }
-    in
     case msg of
         NoOp ->
             ( model, Cmd.none )
 
         WindowResized { width, height } ->
-            ( updateSizeInfo model width height, Cmd.none )
+            ( { windowSize = { width = width, height = height } }, Cmd.none )
 
         GoToPage page ->
             ( model, jumpToPage page )
@@ -443,22 +420,31 @@ viewPoem =
 viewIntro : Model -> Element Msg
 viewIntro { windowSize } =
     let
-        showVerticalPictures : Bool
-        showVerticalPictures =
+        showLargeVerticalPhotos : Bool
+        showLargeVerticalPhotos =
             screenSizeLimits windowSize.width
                 windowSize.height
                 [ ( 1170, 430 ) ]
 
-        showHorizontalPictures : Bool
-        showHorizontalPictures =
-            not showVerticalPictures
+        showSmallVerticalPhotos : Bool
+        showSmallVerticalPhotos =
+            not showLargeHorizontalPhotos
+                && not showLargeVerticalPhotos
+                && screenSizeLimits windowSize.width
+                    windowSize.height
+                    [ ( 825, 300 ) ]
+
+        showLargeHorizontalPhotos : Bool
+        showLargeHorizontalPhotos =
+            not showLargeVerticalPhotos
                 && screenSizeLimits windowSize.width
                     windowSize.height
                     [ ( 445, 700 ) ]
 
-        showSmallPictures : Bool
-        showSmallPictures =
-            not showVerticalPictures
+        showSmallHorizontalPhotos : Bool
+        showSmallHorizontalPhotos =
+            not showSmallVerticalPhotos
+                && not showLargeVerticalPhotos
                 && screenSizeLimits
                     windowSize.width
                     windowSize.height
@@ -506,11 +492,26 @@ viewIntro { windowSize } =
             <|
                 desertPhoto 200
 
-        smallPhotos : Element Msg
-        smallPhotos =
+        smallVerticalPhotos : Element Msg
+        smallVerticalPhotos =
             el
                 [ centerX
                 , centerY
+                , moveLeft 20
+                , moveDown 30
+                , alignRight
+                , behindContent <|
+                    el [ moveUp 90, moveLeft 40 ] <|
+                        berlinPhoto 120
+                ]
+            <|
+                desertPhoto 120
+
+        smallHorizontalPhotos : Element Msg
+        smallHorizontalPhotos =
+            el
+                [ centerX
+                , alignTop
                 , moveRight 60
                 , moveUp 10
                 , inFront <|
@@ -524,7 +525,7 @@ viewIntro { windowSize } =
         horizontalPhotos =
             el
                 [ centerX
-                , centerY
+                , alignTop
                 , moveUp 10
                 , moveRight 90
                 , behindContent <|
@@ -540,7 +541,8 @@ viewIntro { windowSize } =
     column [ pageIdAttr Home, width fill ]
         [ column
             [ width fill
-            , height << px <| windowSize.height
+            , htmlAttribute <| style "height" "100vh"
+            , htmlAttribute <| style "min-height" "100vh"
             , paddingScaled 5
             , Background.color introBackgroundColour
             ]
@@ -548,10 +550,13 @@ viewIntro { windowSize } =
             , el
                 [ centerY
                 , width fill
-                , height <| fillPortion 3
+                , height <| fillPortion 2
                 , behindContent <|
-                    if showVerticalPictures then
+                    if showLargeVerticalPhotos then
                         verticalPhotos
+
+                    else if showSmallVerticalPhotos then
+                        smallVerticalPhotos
 
                     else
                         Element.none
@@ -598,11 +603,13 @@ viewIntro { windowSize } =
             -- Alternatively, we can set the textColumn and this element
             -- to height fill and center the pictures in their surrounding
             -- element.
-            , if showHorizontalPictures then
-                el [ width fill, height <| fillPortion 1, paddingScaled 8 ] horizontalPhotos
+            , if showLargeHorizontalPhotos then
+                el [ width fill, height <| fillPortion 1, paddingScaled 8 ]
+                    horizontalPhotos
 
-              else if showSmallPictures then
-                el [ width fill, height <| fillPortion 1, paddingScaled 8 ] smallPhotos
+              else if showSmallHorizontalPhotos then
+                el [ width fill, height <| fillPortion 1, paddingScaled 8 ]
+                    smallHorizontalPhotos
 
               else
                 Element.none
