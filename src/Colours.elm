@@ -13,6 +13,11 @@ black =
     rgb255 0 0 0
 
 
+almostBlack : Color
+almostBlack =
+    rgb255 68 68 68
+
+
 blackTransparent : Color
 blackTransparent =
     rgba255 0 0 0 0.4

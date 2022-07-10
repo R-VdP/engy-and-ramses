@@ -5,13 +5,12 @@ import Browser.Dom as Dom
 import Browser.Events as BrowserE
 import Colours
     exposing
-        ( almostWhite
-        , black
+        ( almostBlack
+        , almostWhite
         , blackTransparent
         , darkPastelGreen
         , darkPink
         , darkYellow
-        , white
         )
 import Element
     exposing
@@ -158,7 +157,7 @@ titleColour =
 
 textColour : Color
 textColour =
-    black
+    almostBlack
 
 
 mainFont : Font
@@ -359,7 +358,7 @@ menu =
             [ centerX
             , alignTop
             , Font.size menuFontSize
-            , Font.color white
+            , Font.color almostWhite
             ]
             (List.map pageMenuButton
                 [ Home
@@ -387,7 +386,7 @@ viewElement model =
     column
         [ width fill
         , spacingScaled 14
-        , Background.color white
+        , Background.color almostWhite
         , Font.color textColour
         ]
         [ viewIntro model
@@ -464,8 +463,8 @@ viewIntro { windowSize } =
                 [ width shrink
                 , height shrink
                 , Border.width <| scaleSpacing 9
-                , Border.color white
-                , Background.color white
+                , Border.color almostWhite
+                , Background.color almostWhite
                 , rotate angle
                 ]
             <|
