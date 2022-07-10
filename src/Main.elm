@@ -722,7 +722,7 @@ viewAccomodation _ =
             , paragraph []
                 [ text """
                       For guests travelling from abroad, we recommend to arrive
-                      in the weekend of 29/11 and to stay until 06/11.
+                      in the weekend of 29/10 and to stay until 06/11.
                       During this week, we will organise some day trips to
                       discover Cairo and the many historical sites surrounding it.
                       """
