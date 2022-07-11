@@ -9,12 +9,12 @@ with lib;
 let
   dist = "dist";
   mkDerivation =
-    { srcs ? ./elm-srcs.nix
+    { srcs ? ./nix/elm-srcs.nix
     , src
     , pname
     , srcdir ? "./src"
     , targets ? []
-    , registryDat ? ./registry.dat
+    , registryDat ? ./nix/registry.dat
     }:
     stdenv.mkDerivation {
       inherit pname version src;
