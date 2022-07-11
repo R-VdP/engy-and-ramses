@@ -3,19 +3,35 @@ module Main exposing (main)
 import Browser
 import Browser.Dom as Dom
 import Browser.Events as BrowserE
-import Colours
+import Content
     exposing
-        ( almostBlack
+        ( aboutEgyptContent
+        , accomodationContent
         , almostWhite
+        , arabicFont
         , blackTransparent
-        , darkPastelGreen
-        , darkPink
         , darkYellow
+        , fontSizeScaled
+        , introBackgroundColour
+        , introFont
+        , mainFont
+        , mainTitleColour
+        , maxContentTextWidth
+        , maxContentWidth
+        , menuFontSize
+        , paddingScaled
+        , pageMenuButtonPadding
+        , poemLines
+        , scaleSpacing
+        , spacingScaled
+        , subtitleColour
+        , textColour
+        , titleColour
+        , titleFont
         )
 import Element
     exposing
         ( Attribute
-        , Color
         , Element
         , Length
         , alignBottom
@@ -29,6 +45,7 @@ import Element
         , fill
         , fillPortion
         , height
+        , html
         , htmlAttribute
         , image
         , inFront
@@ -52,10 +69,12 @@ import Element
         )
 import Element.Background as Background
 import Element.Border as Border
-import Element.Font as Font exposing (Font)
+import Element.Font as Font
 import Element.Input as Input
-import Html exposing (Html)
-import Html.Attributes exposing (id, style)
+import Html as Html exposing (Html)
+import Html.Attributes as HtmlA exposing (id, style)
+import Json.Encode
+import Markdown
 import Task
 
 
@@ -135,96 +154,6 @@ type alias Event =
     }
 
 
-introBackgroundColour : Color
-introBackgroundColour =
-    darkPastelGreen
-
-
-mainTitleColour : Color
-mainTitleColour =
-    darkYellow
-
-
-subtitleColour : Color
-subtitleColour =
-    almostWhite
-
-
-titleColour : Color
-titleColour =
-    darkPink
-
-
-textColour : Color
-textColour =
-    almostBlack
-
-
-mainFont : Font
-mainFont =
-    Font.typeface "Arima Madurai"
-
-
-titleFont : Font
-titleFont =
-    Font.typeface "Dancing Script"
-
-
-introFont : Font
-introFont =
-    Font.typeface "The Nautigal"
-
-
-arabicFont : Font
-arabicFont =
-    Font.typeface "Gulzar"
-
-
-scaleFontSize : Int -> Int
-scaleFontSize =
-    round << Element.modular 20 1.15
-
-
-fontSizeScaled : Int -> Attribute Msg
-fontSizeScaled =
-    Font.size << scaleFontSize
-
-
-scaleSpacing : Int -> Int
-scaleSpacing =
-    round << Element.modular 5 1.15
-
-
-spacingScaled : Int -> Attribute Msg
-spacingScaled =
-    Element.spacing << scaleSpacing
-
-
-paddingScaled : Int -> Attribute Msg
-paddingScaled =
-    Element.padding << scaleSpacing
-
-
-menuFontSize : Int
-menuFontSize =
-    scaleFontSize 0
-
-
-pageMenuButtonPadding : Int
-pageMenuButtonPadding =
-    scaleSpacing 0
-
-
-maxContentWidth : Int
-maxContentWidth =
-    800
-
-
-maxContentTextWidth : Int
-maxContentTextWidth =
-    700
-
-
 init : () -> ( Model, Cmd Msg )
 init _ =
     let
@@ -281,6 +210,11 @@ jumpToPage =
         << pageId
 
 
+mkMarkdownPage : Page -> String -> Element Msg
+mkMarkdownPage page =
+    mkStdTxtPage page << Markdown.markdownView_
+
+
 mkStdTxtPage : Page -> List (Element Msg) -> Element Msg
 mkStdTxtPage page =
     mkPage page
@@ -292,7 +226,7 @@ mkStdTxtPage page =
             [ width <| maximum maxContentTextWidth fill
             , centerX
             , Font.justify
-            , spacingScaled 15
+            , spacingScaled 13
             ]
 
 
@@ -716,143 +650,35 @@ viewEventSummary event =
 
 viewAccomodation : Model -> Element Msg
 viewAccomodation _ =
-    let
-        content : List (Element Msg)
-        content =
-            [ paragraph []
-                [ text """
-                      The wedding will take place in two different locations in
-                      Cairo, Egypt.
-                      """
-                ]
-            , paragraph []
-                [ text """
-                      For guests travelling from abroad, we recommend to arrive
-                      in the weekend of 29/10 and to stay until 06/11.
-                      During this week, we will organise some day trips to
-                      discover Cairo and the many historical sites surrounding it.
-                      """
-                ]
-            , paragraph []
-                [ text """
-                      In terms of accommodation, we recommend to stay in the
-                      Maadi area in Cairo.
-                      This green, calm and central area is ideally located both
-                      to attend the wedding and to discover downtown Cairo.
-                      """
-                ]
-            , paragraph []
-                [ text """
-                      If you wish to stay in a hotel, we can recommend either the
-                      """
-                , text " "
-                , newTabLink []
-                    { url = "https://goo.gl/maps/RVxAZFCCAXZoAxon9"
-                    , label =
-                        el [ Font.underline ] <| text "Holiday Inn"
-                    }
-                , text " or the "
-                , newTabLink []
-                    { url = "https://goo.gl/maps/7hjch9G8Z6vj39dx7"
-                    , label =
-                        el [ Font.underline ] <| text "Pearl"
-                    }
-                , text " hotels."
-                ]
-            , paragraph []
-                [ text """
-                      Alternatively, you can also rent a room or apartment on
-                      AirBnB.
-                      There are many good options in Cairo, but if you do not
-                      know the city, you can best confirm the location with us
-                      before booking.
-                      We also created
-                      """
-                , text " "
-                , newTabLink []
-                    { url = "https://www.airbnb.fr/wishlists/v/1066413648"
-                    , label =
-                        el [ Font.underline ] <| text "a list with good options"
-                    }
-                , text " on AirBnB."
-                ]
-            ]
-    in
-    mkStdTxtPage Accommodation content
+    mkMarkdownPage Accommodation accomodationContent
 
 
 viewAboutEgypt : Model -> Element Msg
 viewAboutEgypt _ =
     let
-        content : List (Element Msg)
-        content =
-            [ paragraph [] [ text "Coming soon..." ] ]
+        trafficVideo : Element Msg
+        trafficVideo =
+            html <|
+                Html.iframe
+                    [ HtmlA.width 560
+                    , HtmlA.height 315
+                    , HtmlA.src "https://www.youtube-nocookie.com/v/3y_NiOvvALc"
+                    , HtmlA.property "frameborder"
+                        (Json.Encode.string "0")
+                    , HtmlA.property "allowfullscreen"
+                        (Json.Encode.string "true")
+                    , HtmlA.property "allow"
+                        (Json.Encode.string <|
+                            String.join "; "
+                                [ "accelerometer"
+                                , "autoplay"
+                                , "clipboard-write"
+                                , "encrypted-media"
+                                , "gyroscope"
+                                , "picture-in-picture"
+                                ]
+                        )
+                    ]
+                    []
     in
-    mkStdTxtPage AboutEgypt content
-
-
-poemLines : List (List Int)
-poemLines =
-    [ [ 0x0625
-      , 0x0646
-      , 0x20
-      , 0x063A
-      , 0x0627
-      , 0x0628
-      , 0x064E
-      , 0x20
-      , 0x0639
-      , 0x0646
-      , 0x064A
-      , 0x20
-      , 0x0641
-      , 0x0627
-      , 0x0644
-      , 0x0631
-      , 0x0648
-      , 0x062D
-      , 0x064F
-      , 0x20
-      , 0x0645
-      , 0x064E
-      , 0x0633
-      , 0x0643
-      , 0x0646
-      , 0x0647
-      , 0x064F
-      ]
-    , [ 0x0A
-      , 0x0645
-      , 0x064E
-      , 0x0646
-      , 0x20
-      , 0x064A
-      , 0x0633
-      , 0x0643
-      , 0x0646
-      , 0x064F
-      , 0x20
-      , 0x0627
-      , 0x0644
-      , 0x0631
-      , 0x0648
-      , 0x062D
-      , 0x20
-      , 0x0643
-      , 0x064A
-      , 0x0641
-      , 0x20
-      , 0x0627
-      , 0x0644
-      , 0x0642
-      , 0x0644
-      , 0x0628
-      , 0x064F
-      , 0x20
-      , 0x064A
-      , 0x0646
-      , 0x0633
-      , 0x0627
-      , 0x0647
-      ]
-    ]
+    mkMarkdownPage AboutEgypt aboutEgyptContent
