@@ -38,15 +38,15 @@ jobs:
       - name: Move the generated site in place
         run: >-
           rsync
-            --archive
-            --verbose
-            --delete
-            --exclude=.git
-            --exclude=.nojekyll
-            --exclude=CNAME
-            --ignore-times
-            --chmod=u=rwX
-            generated-site/ gh-pages/
+          --archive
+          --verbose
+          --delete
+          --exclude=.git
+          --exclude=.nojekyll
+          --exclude=CNAME
+          --ignore-times
+          --chmod=u=rwX
+          generated-site/ gh-pages/
 
       - name: Push the changes
         run: |
