@@ -14,6 +14,8 @@ jobs:
     steps:
       - name: Checkout the main repo
         uses: "actions/checkout@v3"
+        with:
+          path: 'frontend'
 
       - name: Install the Nix package manager
         uses: cachix/install-nix-action@master
@@ -25,6 +27,7 @@ jobs:
           nix-build
           --arg production true
           --out-link generated-site
+          frontend
 
       - name: Checkout the gh-pages branch repo
         uses: "actions/checkout@v3"
@@ -43,6 +46,7 @@ jobs:
             --chmod=u=rwX \
             generated-site/ gh-pages/
 
+          echo "touch gh-pages/.nojekyll ..."
           touch gh-pages/.nojekyll
 
       - name: Push the changes
