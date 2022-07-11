@@ -74,13 +74,16 @@ elmUiRenderer =
             , Element.Background.color (Element.rgb255 245 245 245)
             ]
     , unorderedList =
-        column [ Element.spacing 15 ]
+        column [ spacing 15 ]
             << List.map
                 (\(ListItem task children) ->
                     row [ spacing 5 ]
-                        [ row
-                            [ Element.alignTop ]
-                            ((case task of
+                        [ el
+                            [ alignTop
+                            , width shrink
+                            ]
+                          <|
+                            case task of
                                 IncompleteTask ->
                                     Element.Input.defaultCheckbox False
 
@@ -88,11 +91,8 @@ elmUiRenderer =
                                     Element.Input.defaultCheckbox True
 
                                 NoTask ->
-                                    text "•"
-                             )
-                                :: text " "
-                                :: children
-                            )
+                                    text "• "
+                        , paragraph [ width fill ] children
                         ]
                 )
     , orderedList =
