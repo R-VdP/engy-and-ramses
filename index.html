@@ -13,8 +13,7 @@
 <body>
   <script>
     // Add a random query string to avoid caching
-    // TODO: remove in prod
-    var loadMain = document.createElement("script")
+    const loadMain = document.createElement("script")
     document.head.appendChild(loadMain)
     loadMain.onload = function() {
       Elm.Main.init({})

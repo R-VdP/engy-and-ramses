@@ -10,8 +10,8 @@ import Element
 import Element.Font as Font exposing (Font)
 
 
-accomodationContent : String
-accomodationContent =
+accomodation : String
+accomodation =
     """
 The wedding will take place in two different locations in Cairo, Egypt.
 
@@ -24,23 +24,31 @@ In terms of accommodation, we recommend to stay in the Maadi area in Cairo.
 This green, calm and central area is ideally located both to attend
 the wedding and to discover downtown Cairo.
 
-If you wish to stay in a hotel, we can recommend either the
-[Holiday Inn][holiday_inn] or the [Pearl][pearl] hotels.
+If you wish to stay in a hotel, we can recommend the following hotels:
+1. [Holiday Inn][holiday_inn]
+1. [Pearl][pearl]
+1. [Villa Belle Epoque][belle_epoque]
 
 Alternatively, you can also rent a room or apartment on AirBnB.
 There are many good options in Cairo, but if you do not know the city,
 you can best confirm the location with us before booking.
 We also created
-[a list with good options][airbnb] on AirBnB.
+[a list with good options][airbnb] on AirBnB,
+but make sure to check that the places corresponds to your preferences as well.
 
 [holiday_inn]: https://goo.gl/maps/RVxAZFCCAXZoAxon9
 [pearl]: https://goo.gl/maps/7hjch9G8Z6vj39dx7
+[belle_epoque]: https://goo.gl/maps/949bc8RyEin4hKTt5
 [airbnb]: https://www.airbnb.fr/wishlists/v/1066413648
 """
 
 
-aboutEgyptContent : String
-aboutEgyptContent =
+
+-- TODO add dress code for evening events
+
+
+aboutEgypt : String
+aboutEgypt =
     """
 # Transportation
 
@@ -62,8 +70,14 @@ If your location is not close to a metro station,
 there is still the option to take an Uber for the final part of your journey,
 but to do part of the journey by metro to avoid traffic.
 
-Walking is also an option, if you do not need to go far.
-Be careful though when walking in busy streets or when crossing the street.
+Walking is also an option, if you do not need to go far, and there are many
+nice areas to stroll around.
+Be mindful of the traffic though when walking in busy streets and
+when crossing the street.
+
+[Here's a little teaser][cairo_traffic] in case you are curious.
+
+[cairo_traffic]: https://www.youtube.com/watch?v=3y_NiOvvALc
 
 # Food and drinks
 
@@ -86,6 +100,60 @@ Regarding water, it is best to avoid drinking tap water, and to buy bottled
 water instead or to use the water dispenser in your hotel or apartment if
 there is one.
 Cooking or brushing your teeth with tap water is perfectly fine though.
+
+# Weather
+
+The weather in November should be very pleasant.
+Skies are usually clear with plenty of sunshine.
+Be aware though that evenings can still be quite cool, so you best pack a
+sweater, a light jacket, and long pants as well!
+
+# Dress code
+
+Egypt is a rather conservative country, and so it is advisable to dress rather
+modestly.
+When walking on the street, it's best to avoid short skirts (above the knee),
+and to avoid showing shoulders or cleavage.
+
+# Visas
+
+Most non-Egyptians will require a visa to enter Egypt.
+information on Egypt's visa policy can be found on
+[this Wikipedia page][egypt_visa_policy].
+However, it is best to cross-check this information either with
+the travel advisories provided by the foreign affairs ministry of your country
+or with the Egyptian embassy.
+
+[egypt_visa_policy]: https://en.wikipedia.org/wiki/Visa_policy_of_Egypt
+
+## On-arrival visa
+
+If you have a passport that makes you eligible for a visa on arrival,
+then this is by far the easiest option.
+In that case you do not need any documents beside your passport and
+the address where you will be staying.
+You can buy the on-arrival visa at the airport in Cairo at the counter on
+the right just before the immigration checkpoint.
+The on-arrival visa will cost you $25 and needs to be paid in cash, either in
+euro or in USD.
+You will receive a visa sticker,
+**do not put the visa in your passport yourself**,
+but give it to the officer at the immigration checkpoint, who will put it in your
+passport and stamp it.
+
+## e-Visa
+
+Alternatively, you can buy an e-Visa online on the [Egypt e-Visa Portal][evisa].
+In the FAQ you will find the list of nationalities eligible for an e-Visa.
+
+## Visa from the embassy
+
+If you are not eligible for either an on-arrival visa or an e-Visa, you will
+need to contact the nearest Egyptian embassy to introduce a visa application.
+In this case, it is probably best to inform yourself well in advance about the
+duration of the procedure.
+
+[evisa]: https://visa2egypt.gov.eg/eVisa/
 """
 
 

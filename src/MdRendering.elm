@@ -1,4 +1,4 @@
-module MdRendering exposing (viewMarkdown)
+module MdRendering exposing (rawTextToId, viewMarkdown)
 
 import Content exposing (fontSizeScaled, introBackgroundColour, titleFont)
 import Element
@@ -8,18 +8,23 @@ import Element
         , column
         , el
         , fill
+        , html
+        , htmlAttribute
+        , image
         , newTabLink
+        , padding
         , paragraph
+        , rgb255
         , row
         , shrink
         , spacing
         , text
         , width
         )
-import Element.Background
-import Element.Border
+import Element.Background as Background
+import Element.Border as Border
 import Element.Font as Font
-import Element.Input
+import Element.Input as Input
 import Html
 import Html.Attributes
 import Markdown.Block as Block exposing (ListItem(..), Task(..))
@@ -48,7 +53,7 @@ elmUiRenderer =
     , paragraph = paragraph []
     , thematicBreak = Element.none
     , text = text
-    , strong = row [ Font.bold ]
+    , strong = row [ Font.heavy, Font.underline ]
     , emphasis = row [ Font.italic ]
     , strikethrough = row [ Font.strike ]
     , codeSpan = text
@@ -58,17 +63,17 @@ elmUiRenderer =
                 { url = destination
                 , label = paragraph [ Font.underline ] body
                 }
-    , hardLineBreak = Element.html <| Html.br [] []
+    , hardLineBreak = html <| Html.br [] []
     , image =
-        \image ->
-            Element.image [ Element.width Element.fill ]
-                { src = image.src, description = image.alt }
+        \img ->
+            image [ width fill ]
+                { src = img.src, description = img.alt }
     , blockQuote =
         column
-            [ Element.Border.widthEach { top = 0, right = 0, bottom = 0, left = 10 }
-            , Element.padding 10
-            , Element.Border.color (Element.rgb255 145 145 145)
-            , Element.Background.color (Element.rgb255 245 245 245)
+            [ Border.widthEach { top = 0, right = 0, bottom = 0, left = 10 }
+            , padding 10
+            , Border.color (rgb255 145 145 145)
+            , Background.color (rgb255 245 245 245)
             ]
     , unorderedList =
         column [ spacing 15 ]
@@ -82,10 +87,10 @@ elmUiRenderer =
                           <|
                             case task of
                                 IncompleteTask ->
-                                    Element.Input.defaultCheckbox False
+                                    Input.defaultCheckbox False
 
                                 CompletedTask ->
-                                    Element.Input.defaultCheckbox True
+                                    Input.defaultCheckbox True
 
                                 NoTask ->
                                     text "• "
@@ -127,7 +132,7 @@ heading :
     }
     -> Element msg
 heading { level, rawText, children } =
-    Element.paragraph
+    paragraph
         [ case level of
             Block.H1 ->
                 fontSizeScaled 4
@@ -140,11 +145,7 @@ heading { level, rawText, children } =
         , Font.bold
         , Font.color introBackgroundColour
         , Font.family [ titleFont ]
-        , Element.htmlAttribute
-            << Html.Attributes.attribute "name"
-          <|
-            rawTextToId rawText
-        , Element.htmlAttribute
+        , htmlAttribute
             << Html.Attributes.id
           <|
             rawTextToId rawText

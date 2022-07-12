@@ -1,4 +1,4 @@
-module Main exposing (Model, Msg, main)
+module Main exposing (Model, Msg, ParsedMarkdown, WindowSize, main)
 
 import Browser
 import Browser.Dom as Dom
@@ -43,7 +43,6 @@ import Element
         , fill
         , fillPortion
         , height
-        , html
         , htmlAttribute
         , image
         , inFront
@@ -69,13 +68,12 @@ import Element.Background as Background
 import Element.Border as Border
 import Element.Font as Font
 import Element.Input as Input
-import Element.Lazy exposing (lazy)
+import Element.Lazy exposing (lazy, lazy2)
 import Html exposing (Html)
-import Html.Attributes as HtmlA exposing (id, style)
-import Json.Encode
+import Html.Attributes exposing (id, style, title)
 import Markdown.Block as MdBlock
 import Markdown.Parser
-import MdRendering
+import MdRendering exposing (rawTextToId)
 import Task
 
 
@@ -89,47 +87,68 @@ main =
         }
 
 
-type Page
-    = Home
-    | Events
-    | Accommodation
-    | AboutEgypt
+type alias Page =
+    { title : String
+    , shortTitle : Maybe String
+    , view : Model -> String -> Element Msg
+    }
 
 
-pageTitle : Page -> String
-pageTitle page =
-    case page of
-        Home ->
-            "Home"
-
-        Events ->
-            "Events"
-
-        Accommodation ->
-            "Accomodation"
-
-        AboutEgypt ->
-            "About Egypt"
-
-
-pageTitleShort : Page -> String
-pageTitleShort page =
-    case page of
-        AboutEgypt ->
-            "Egypt"
-
-        _ ->
-            pageTitle page
+pages : List Page
+pages =
+    [ { title = "Home"
+      , shortTitle = Nothing
+      , view = \model -> lazy2 viewIntro model.windowSize
+      }
+    , { title = "Events"
+      , shortTitle = Nothing
+      , view = always <| lazy viewEvents
+      }
+    , { title = "Accommodation"
+      , shortTitle = Nothing
+      , view = always <| lazy2 mkMarkdownPage accomodationContent
+      }
+    , { title = "About Egypt"
+      , shortTitle = Just "Egypt"
+      , view = always <| lazy2 mkMarkdownPage aboutEgyptContent
+      }
+    ]
 
 
-pageId : Page -> String
-pageId =
-    (++) "page-id-" << String.toLower << String.replace " " "-" << pageTitle
+type alias ParsedMarkdown =
+    Result String (List MdBlock.Block)
 
 
-pageIdAttr : Page -> Attribute Msg
-pageIdAttr =
-    htmlAttribute << id << pageId
+accomodationContent : ParsedMarkdown
+accomodationContent =
+    parseMarkdown Content.accomodation
+
+
+aboutEgyptContent : ParsedMarkdown
+aboutEgyptContent =
+    parseMarkdown Content.aboutEgypt
+
+
+parseMarkdown : String -> ParsedMarkdown
+parseMarkdown =
+    Result.mapError
+        (String.join "\n" << List.map Markdown.Parser.deadEndToString)
+        << Markdown.Parser.parse
+
+
+pageShortTitle : Page -> String
+pageShortTitle page =
+    Maybe.withDefault page.title page.shortTitle
+
+
+titleToId : String -> String
+titleToId =
+    (++) "page-id-" << rawTextToId
+
+
+titleToIdAttr : String -> Attribute Msg
+titleToIdAttr =
+    htmlAttribute << id << titleToId
 
 
 type alias WindowSize =
@@ -142,14 +161,8 @@ type Msg
     | NoOp
 
 
-type alias ParsedMarkdown =
-    Result String (List MdBlock.Block)
-
-
 type alias Model =
     { windowSize : WindowSize
-    , accomodationContent : ParsedMarkdown
-    , aboutEgyptContent : ParsedMarkdown
     }
 
 
@@ -160,13 +173,6 @@ type alias Event =
     , location2 : String
     , mapsUrl : String
     }
-
-
-parseMarkdown : String -> ParsedMarkdown
-parseMarkdown =
-    Result.mapError
-        (String.join "\n" << List.map Markdown.Parser.deadEndToString)
-        << Markdown.Parser.parse
 
 
 init : () -> ( Model, Cmd Msg )
@@ -184,8 +190,6 @@ init _ =
                 }
     in
     ( { windowSize = { width = 0, height = 0 }
-      , accomodationContent = parseMarkdown Content.accomodationContent
-      , aboutEgyptContent = parseMarkdown Content.aboutEgyptContent
       }
     , Task.perform handleViewportInfo Dom.getViewport
     )
@@ -227,17 +231,18 @@ jumpToPage =
                 Dom.setViewport info.element.x (info.element.y - toFloat headerHeight)
             )
         << Dom.getElement
-        << pageId
+        << titleToId
+        << .title
 
 
-mkMarkdownPage : Page -> ParsedMarkdown -> Element Msg
-mkMarkdownPage page =
-    mkStdTxtPage page << MdRendering.viewMarkdown
+mkMarkdownPage : ParsedMarkdown -> String -> Element Msg
+mkMarkdownPage parsed title =
+    mkStdTxtPage title <| MdRendering.viewMarkdown parsed
 
 
-mkStdTxtPage : Page -> List (Element Msg) -> Element Msg
-mkStdTxtPage page =
-    mkPage page
+mkStdTxtPage : String -> List (Element Msg) -> Element Msg
+mkStdTxtPage title =
+    mkPage title
         << el
             [ width fill
             , paddingScaled 11
@@ -250,21 +255,21 @@ mkStdTxtPage page =
             ]
 
 
-mkPage : Page -> Element Msg -> Element Msg
-mkPage page content =
+mkPage : String -> Element Msg -> Element Msg
+mkPage title content =
     column
-        [ pageIdAttr page
+        [ titleToIdAttr title
         , width fill
         , paddingScaled 11
         , spacingScaled 13
         ]
-        [ viewPageTitle page
+        [ viewPageTitle title
         , content
         ]
 
 
-viewPageTitle : Page -> Element Msg
-viewPageTitle page =
+viewPageTitle : String -> Element Msg
+viewPageTitle title =
     paragraph
         [ alignTop
         , fontSizeScaled 7
@@ -273,7 +278,7 @@ viewPageTitle page =
         , Font.color titleColour
         , Font.family [ titleFont ]
         ]
-        [ text << pageTitle <| page ]
+        [ text <| title ]
 
 
 view : Model -> Html Msg
@@ -314,13 +319,7 @@ menu =
             , Font.size menuFontSize
             , Font.color almostWhite
             ]
-            (List.map pageMenuButton
-                [ Home
-                , Events
-                , Accommodation
-                , AboutEgypt
-                ]
-            )
+            (List.map pageMenuButton pages)
 
 
 pageMenuButton : Page -> Element Msg
@@ -331,7 +330,7 @@ pageMenuButton page =
         ]
         { onPress = Just (GoToPage page)
         , label =
-            el [ padding pageMenuButtonPadding ] << text << pageTitleShort <| page
+            el [ padding pageMenuButtonPadding ] << text << pageShortTitle <| page
         }
 
 
@@ -343,11 +342,7 @@ viewElement model =
         , Background.color almostWhite
         , Font.color textColour
         ]
-        [ lazy viewIntro model.windowSize
-        , viewEvents
-        , lazy viewAccomodation model.accomodationContent
-        , lazy viewAboutEgypt model.aboutEgyptContent
-        ]
+        (List.map (\p -> p.view model p.title) pages)
 
 
 viewPoem : Element Msg
@@ -370,8 +365,8 @@ viewPoem =
         List.map lineToParagraph poemLines
 
 
-viewIntro : WindowSize -> Element Msg
-viewIntro windowSize =
+viewIntro : WindowSize -> String -> Element Msg
+viewIntro windowSize title =
     let
         showLargeVerticalPhotos : Bool
         showLargeVerticalPhotos =
@@ -491,7 +486,7 @@ viewIntro windowSize =
         introBaseHeight =
             ceiling <| toFloat windowSize.width * tan (pi / 32) / 2
     in
-    column [ pageIdAttr Home, width fill ]
+    column [ titleToIdAttr title, width fill ]
         [ column
             [ width fill
             , htmlAttribute <| style "height" "100vh"
@@ -582,8 +577,8 @@ screenSizeLimits windowWidth windowHeight =
     List.any (\( w, h ) -> windowWidth >= w && windowHeight >= h)
 
 
-viewEvents : Element Msg
-viewEvents =
+viewEvents : String -> Element Msg
+viewEvents title =
     let
         officiationEvent : Event
         officiationEvent =
@@ -611,13 +606,27 @@ viewEvents =
                 ]
                 << viewEventSummary
     in
-    mkPage Events <|
-        wrappedRow
+    mkPage title <|
+        column
             [ width <| maximum maxContentWidth fill
             , centerX
+            , spacingScaled 13
             ]
-            [ viewEvent officiationEvent
-            , viewEvent partyEvent
+            [ wrappedRow [ width fill ]
+                [ viewEvent officiationEvent
+                , viewEvent partyEvent
+                ]
+            , el [ width fill, paddingScaled 11 ] <|
+                textColumn
+                    [ width <| maximum maxContentTextWidth fill
+                    , centerX
+                    , Font.justify
+                    ]
+                    [ paragraph []
+                        [ text "More info on how to get to the events will "
+                        , text "follow closer to the date."
+                        ]
+                    ]
             ]
 
 
@@ -666,39 +675,3 @@ viewEventSummary event =
                     text "Open in maps"
             }
         ]
-
-
-viewAccomodation : ParsedMarkdown -> Element Msg
-viewAccomodation =
-    mkMarkdownPage Accommodation
-
-
-viewAboutEgypt : ParsedMarkdown -> Element Msg
-viewAboutEgypt =
-    let
-        trafficVideo : Element Msg
-        trafficVideo =
-            html <|
-                Html.iframe
-                    [ HtmlA.width 560
-                    , HtmlA.height 315
-                    , HtmlA.src "https://www.youtube-nocookie.com/v/3y_NiOvvALc"
-                    , HtmlA.property "frameborder"
-                        (Json.Encode.string "0")
-                    , HtmlA.property "allowfullscreen"
-                        (Json.Encode.string "true")
-                    , HtmlA.property "allow"
-                        (Json.Encode.string <|
-                            String.join "; "
-                                [ "accelerometer"
-                                , "autoplay"
-                                , "clipboard-write"
-                                , "encrypted-media"
-                                , "gyroscope"
-                                , "picture-in-picture"
-                                ]
-                        )
-                    ]
-                    []
-    in
-    mkMarkdownPage AboutEgypt
