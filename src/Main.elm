@@ -1,21 +1,35 @@
-module Main exposing (main)
+module Main exposing (Model, Msg, ParsedMarkdown, WindowSize, main)
 
 import Browser
 import Browser.Dom as Dom
 import Browser.Events as BrowserE
-import Colours
+import Content
     exposing
-        ( almostBlack
-        , almostWhite
+        ( almostWhite
+        , arabicFont
         , blackTransparent
-        , darkPastelGreen
-        , darkPink
         , darkYellow
+        , fontSizeScaled
+        , introBackgroundColour
+        , introFont
+        , mainFont
+        , mainTitleColour
+        , maxContentTextWidth
+        , maxContentWidth
+        , menuFontSize
+        , paddingScaled
+        , pageMenuButtonPadding
+        , poemLines
+        , scaleSpacing
+        , spacingScaled
+        , subtitleColour
+        , textColour
+        , titleColour
+        , titleFont
         )
 import Element
     exposing
         ( Attribute
-        , Color
         , Element
         , Length
         , alignBottom
@@ -52,10 +66,14 @@ import Element
         )
 import Element.Background as Background
 import Element.Border as Border
-import Element.Font as Font exposing (Font)
+import Element.Font as Font
 import Element.Input as Input
+import Element.Lazy exposing (lazy, lazy2)
 import Html exposing (Html)
-import Html.Attributes exposing (id, style)
+import Html.Attributes exposing (id, style, title)
+import Markdown.Block as MdBlock
+import Markdown.Parser
+import MdRendering exposing (rawTextToId)
 import Task
 
 
@@ -69,47 +87,68 @@ main =
         }
 
 
-type Page
-    = Home
-    | Events
-    | Accommodation
-    | AboutEgypt
+type alias Page =
+    { title : String
+    , shortTitle : Maybe String
+    , view : Model -> String -> Element Msg
+    }
 
 
-pageTitle : Page -> String
-pageTitle page =
-    case page of
-        Home ->
-            "Home"
-
-        Events ->
-            "Events"
-
-        Accommodation ->
-            "Accomodation"
-
-        AboutEgypt ->
-            "About Egypt"
-
-
-pageTitleShort : Page -> String
-pageTitleShort page =
-    case page of
-        AboutEgypt ->
-            "Egypt"
-
-        _ ->
-            pageTitle page
+pages : List Page
+pages =
+    [ { title = "Home"
+      , shortTitle = Nothing
+      , view = \model -> lazy2 viewIntro model.windowSize
+      }
+    , { title = "Events"
+      , shortTitle = Nothing
+      , view = always <| lazy viewEvents
+      }
+    , { title = "Accommodation"
+      , shortTitle = Nothing
+      , view = always <| lazy2 mkMarkdownPage accomodationContent
+      }
+    , { title = "About Egypt"
+      , shortTitle = Just "Egypt"
+      , view = always <| lazy2 mkMarkdownPage aboutEgyptContent
+      }
+    ]
 
 
-pageId : Page -> String
-pageId =
-    (++) "page-id-" << String.toLower << String.replace " " "-" << pageTitle
+type alias ParsedMarkdown =
+    Result String (List MdBlock.Block)
 
 
-pageIdAttr : Page -> Attribute Msg
-pageIdAttr =
-    htmlAttribute << id << pageId
+accomodationContent : ParsedMarkdown
+accomodationContent =
+    parseMarkdown Content.accomodation
+
+
+aboutEgyptContent : ParsedMarkdown
+aboutEgyptContent =
+    parseMarkdown Content.aboutEgypt
+
+
+parseMarkdown : String -> ParsedMarkdown
+parseMarkdown =
+    Result.mapError
+        (String.join "\n" << List.map Markdown.Parser.deadEndToString)
+        << Markdown.Parser.parse
+
+
+pageShortTitle : Page -> String
+pageShortTitle page =
+    Maybe.withDefault page.title page.shortTitle
+
+
+titleToId : String -> String
+titleToId =
+    (++) "page-id-" << rawTextToId
+
+
+titleToIdAttr : String -> Attribute Msg
+titleToIdAttr =
+    htmlAttribute << id << titleToId
 
 
 type alias WindowSize =
@@ -123,7 +162,8 @@ type Msg
 
 
 type alias Model =
-    { windowSize : WindowSize }
+    { windowSize : WindowSize
+    }
 
 
 type alias Event =
@@ -133,96 +173,6 @@ type alias Event =
     , location2 : String
     , mapsUrl : String
     }
-
-
-introBackgroundColour : Color
-introBackgroundColour =
-    darkPastelGreen
-
-
-mainTitleColour : Color
-mainTitleColour =
-    darkYellow
-
-
-subtitleColour : Color
-subtitleColour =
-    almostWhite
-
-
-titleColour : Color
-titleColour =
-    darkPink
-
-
-textColour : Color
-textColour =
-    almostBlack
-
-
-mainFont : Font
-mainFont =
-    Font.typeface "Arima Madurai"
-
-
-titleFont : Font
-titleFont =
-    Font.typeface "Dancing Script"
-
-
-introFont : Font
-introFont =
-    Font.typeface "The Nautigal"
-
-
-arabicFont : Font
-arabicFont =
-    Font.typeface "Gulzar"
-
-
-scaleFontSize : Int -> Int
-scaleFontSize =
-    round << Element.modular 20 1.15
-
-
-fontSizeScaled : Int -> Attribute Msg
-fontSizeScaled =
-    Font.size << scaleFontSize
-
-
-scaleSpacing : Int -> Int
-scaleSpacing =
-    round << Element.modular 5 1.15
-
-
-spacingScaled : Int -> Attribute Msg
-spacingScaled =
-    Element.spacing << scaleSpacing
-
-
-paddingScaled : Int -> Attribute Msg
-paddingScaled =
-    Element.padding << scaleSpacing
-
-
-menuFontSize : Int
-menuFontSize =
-    scaleFontSize 0
-
-
-pageMenuButtonPadding : Int
-pageMenuButtonPadding =
-    scaleSpacing 0
-
-
-maxContentWidth : Int
-maxContentWidth =
-    800
-
-
-maxContentTextWidth : Int
-maxContentTextWidth =
-    700
 
 
 init : () -> ( Model, Cmd Msg )
@@ -239,7 +189,8 @@ init _ =
                 , height = floor vp.viewport.height
                 }
     in
-    ( { windowSize = { width = 0, height = 0 } }
+    ( { windowSize = { width = 0, height = 0 }
+      }
     , Task.perform handleViewportInfo Dom.getViewport
     )
 
@@ -251,7 +202,9 @@ update msg model =
             ( model, Cmd.none )
 
         WindowResized { width, height } ->
-            ( { windowSize = { width = width, height = height } }, Cmd.none )
+            ( { model | windowSize = { width = width, height = height } }
+            , Cmd.none
+            )
 
         GoToPage page ->
             ( model, jumpToPage page )
@@ -278,12 +231,18 @@ jumpToPage =
                 Dom.setViewport info.element.x (info.element.y - toFloat headerHeight)
             )
         << Dom.getElement
-        << pageId
+        << titleToId
+        << .title
 
 
-mkStdTxtPage : Page -> List (Element Msg) -> Element Msg
-mkStdTxtPage page =
-    mkPage page
+mkMarkdownPage : ParsedMarkdown -> String -> Element Msg
+mkMarkdownPage parsed title =
+    mkStdTxtPage title <| MdRendering.viewMarkdown parsed
+
+
+mkStdTxtPage : String -> List (Element Msg) -> Element Msg
+mkStdTxtPage title =
+    mkPage title
         << el
             [ width fill
             , paddingScaled 11
@@ -292,25 +251,25 @@ mkStdTxtPage page =
             [ width <| maximum maxContentTextWidth fill
             , centerX
             , Font.justify
-            , spacingScaled 15
+            , spacingScaled 13
             ]
 
 
-mkPage : Page -> Element Msg -> Element Msg
-mkPage page content =
+mkPage : String -> Element Msg -> Element Msg
+mkPage title content =
     column
-        [ pageIdAttr page
+        [ titleToIdAttr title
         , width fill
         , paddingScaled 11
         , spacingScaled 13
         ]
-        [ viewPageTitle page
+        [ viewPageTitle title
         , content
         ]
 
 
-viewPageTitle : Page -> Element Msg
-viewPageTitle page =
+viewPageTitle : String -> Element Msg
+viewPageTitle title =
     paragraph
         [ alignTop
         , fontSizeScaled 7
@@ -319,7 +278,7 @@ viewPageTitle page =
         , Font.color titleColour
         , Font.family [ titleFont ]
         ]
-        [ text << pageTitle <| page ]
+        [ text <| title ]
 
 
 view : Model -> Html Msg
@@ -344,7 +303,7 @@ view model =
             ]
         , inFront <| el [ width windowWidth ] menu
         ]
-        (viewElement model)
+        (lazy viewElement model)
 
 
 menu : Element Msg
@@ -360,13 +319,7 @@ menu =
             , Font.size menuFontSize
             , Font.color almostWhite
             ]
-            (List.map pageMenuButton
-                [ Home
-                , Events
-                , Accommodation
-                , AboutEgypt
-                ]
-            )
+            (List.map pageMenuButton pages)
 
 
 pageMenuButton : Page -> Element Msg
@@ -377,7 +330,7 @@ pageMenuButton page =
         ]
         { onPress = Just (GoToPage page)
         , label =
-            el [ padding pageMenuButtonPadding ] << text << pageTitleShort <| page
+            el [ padding pageMenuButtonPadding ] << text << pageShortTitle <| page
         }
 
 
@@ -389,11 +342,7 @@ viewElement model =
         , Background.color almostWhite
         , Font.color textColour
         ]
-        [ viewIntro model
-        , viewEvents model
-        , viewAccomodation model
-        , viewAboutEgypt model
-        ]
+        (List.map (\p -> p.view model p.title) pages)
 
 
 viewPoem : Element Msg
@@ -416,8 +365,8 @@ viewPoem =
         List.map lineToParagraph poemLines
 
 
-viewIntro : Model -> Element Msg
-viewIntro { windowSize } =
+viewIntro : WindowSize -> String -> Element Msg
+viewIntro windowSize title =
     let
         showLargeVerticalPhotos : Bool
         showLargeVerticalPhotos =
@@ -537,7 +486,7 @@ viewIntro { windowSize } =
         introBaseHeight =
             ceiling <| toFloat windowSize.width * tan (pi / 32) / 2
     in
-    column [ pageIdAttr Home, width fill ]
+    column [ titleToIdAttr title, width fill ]
         [ column
             [ width fill
             , htmlAttribute <| style "height" "100vh"
@@ -628,8 +577,8 @@ screenSizeLimits windowWidth windowHeight =
     List.any (\( w, h ) -> windowWidth >= w && windowHeight >= h)
 
 
-viewEvents : Model -> Element Msg
-viewEvents _ =
+viewEvents : String -> Element Msg
+viewEvents title =
     let
         officiationEvent : Event
         officiationEvent =
@@ -657,13 +606,27 @@ viewEvents _ =
                 ]
                 << viewEventSummary
     in
-    mkPage Events <|
-        wrappedRow
+    mkPage title <|
+        column
             [ width <| maximum maxContentWidth fill
             , centerX
+            , spacingScaled 13
             ]
-            [ viewEvent officiationEvent
-            , viewEvent partyEvent
+            [ wrappedRow [ width fill ]
+                [ viewEvent officiationEvent
+                , viewEvent partyEvent
+                ]
+            , el [ width fill, paddingScaled 11 ] <|
+                textColumn
+                    [ width <| maximum maxContentTextWidth fill
+                    , centerX
+                    , Font.justify
+                    ]
+                    [ paragraph []
+                        [ text "More info on how to get to the events will "
+                        , text "follow closer to the date."
+                        ]
+                    ]
             ]
 
 
@@ -712,147 +675,3 @@ viewEventSummary event =
                     text "Open in maps"
             }
         ]
-
-
-viewAccomodation : Model -> Element Msg
-viewAccomodation _ =
-    let
-        content : List (Element Msg)
-        content =
-            [ paragraph []
-                [ text """
-                      The wedding will take place in two different locations in
-                      Cairo, Egypt.
-                      """
-                ]
-            , paragraph []
-                [ text """
-                      For guests travelling from abroad, we recommend to arrive
-                      in the weekend of 29/10 and to stay until 06/11.
-                      During this week, we will organise some day trips to
-                      discover Cairo and the many historical sites surrounding it.
-                      """
-                ]
-            , paragraph []
-                [ text """
-                      In terms of accommodation, we recommend to stay in the
-                      Maadi area in Cairo.
-                      This green, calm and central area is ideally located both
-                      to attend the wedding and to discover downtown Cairo.
-                      """
-                ]
-            , paragraph []
-                [ text """
-                      If you wish to stay in a hotel, we can recommend either the
-                      """
-                , text " "
-                , newTabLink []
-                    { url = "https://goo.gl/maps/RVxAZFCCAXZoAxon9"
-                    , label =
-                        el [ Font.underline ] <| text "Holiday Inn"
-                    }
-                , text " or the "
-                , newTabLink []
-                    { url = "https://goo.gl/maps/7hjch9G8Z6vj39dx7"
-                    , label =
-                        el [ Font.underline ] <| text "Pearl"
-                    }
-                , text " hotels."
-                ]
-            , paragraph []
-                [ text """
-                      Alternatively, you can also rent a room or apartment on
-                      AirBnB.
-                      There are many good options in Cairo, but if you do not
-                      know the city, you can best confirm the location with us
-                      before booking.
-                      We also created
-                      """
-                , text " "
-                , newTabLink []
-                    { url = "https://www.airbnb.fr/wishlists/v/1066413648"
-                    , label =
-                        el [ Font.underline ] <| text "a list with good options"
-                    }
-                , text " on AirBnB."
-                ]
-            ]
-    in
-    mkStdTxtPage Accommodation content
-
-
-viewAboutEgypt : Model -> Element Msg
-viewAboutEgypt _ =
-    let
-        content : List (Element Msg)
-        content =
-            [ paragraph [] [ text "Coming soon..." ] ]
-    in
-    mkStdTxtPage AboutEgypt content
-
-
-poemLines : List (List Int)
-poemLines =
-    [ [ 0x0625
-      , 0x0646
-      , 0x20
-      , 0x063A
-      , 0x0627
-      , 0x0628
-      , 0x064E
-      , 0x20
-      , 0x0639
-      , 0x0646
-      , 0x064A
-      , 0x20
-      , 0x0641
-      , 0x0627
-      , 0x0644
-      , 0x0631
-      , 0x0648
-      , 0x062D
-      , 0x064F
-      , 0x20
-      , 0x0645
-      , 0x064E
-      , 0x0633
-      , 0x0643
-      , 0x0646
-      , 0x0647
-      , 0x064F
-      ]
-    , [ 0x0A
-      , 0x0645
-      , 0x064E
-      , 0x0646
-      , 0x20
-      , 0x064A
-      , 0x0633
-      , 0x0643
-      , 0x0646
-      , 0x064F
-      , 0x20
-      , 0x0627
-      , 0x0644
-      , 0x0631
-      , 0x0648
-      , 0x062D
-      , 0x20
-      , 0x0643
-      , 0x064A
-      , 0x0641
-      , 0x20
-      , 0x0627
-      , 0x0644
-      , 0x0642
-      , 0x0644
-      , 0x0628
-      , 0x064F
-      , 0x20
-      , 0x064A
-      , 0x0646
-      , 0x0633
-      , 0x0627
-      , 0x0647
-      ]
-    ]
