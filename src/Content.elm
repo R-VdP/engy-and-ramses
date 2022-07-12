@@ -13,78 +13,80 @@ import Element.Font as Font exposing (Font)
 accomodationContent : String
 accomodationContent =
     """
-  The wedding will take place in two different locations in Cairo, Egypt.
+The wedding will take place in two different locations in Cairo, Egypt.
 
-  For guests travelling from abroad, we recommend to arrive
-  in the weekend of 29/10 and to stay until 06/11.
-  During this week, we will organise some day trips to
-  discover Cairo and the many historical sites surrounding it.
+For guests travelling from abroad, we recommend to arrive
+in the weekend of 29/10 and to stay until 06/11.
+During this week, we will organise some day trips to
+discover Cairo and the many historical sites surrounding it.
 
-  In terms of accommodation, we recommend to stay in the Maadi area in Cairo.
-  This green, calm and central area is ideally located both to attend
-  the wedding and to discover downtown Cairo.
+In terms of accommodation, we recommend to stay in the Maadi area in Cairo.
+This green, calm and central area is ideally located both to attend
+the wedding and to discover downtown Cairo.
 
-  If you wish to stay in a hotel, we can recommend either the
-  [Holiday Inn](https://goo.gl/maps/RVxAZFCCAXZoAxon9) or the
-  [Pearl]("https://goo.gl/maps/7hjch9G8Z6vj39dx7") hotels.
+If you wish to stay in a hotel, we can recommend either the
+[Holiday Inn][holiday_inn] or the [Pearl][pearl] hotels.
 
-  Alternatively, you can also rent a room or apartment on AirBnB.
-  There are many good options in Cairo, but if you do not know the city,
-  you can best confirm the location with us before booking.
-  We also created
-  [a list with good options]("https://www.airbnb.fr/wishlists/v/1066413648")
-  on AirBnB.
-  """
+Alternatively, you can also rent a room or apartment on AirBnB.
+There are many good options in Cairo, but if you do not know the city,
+you can best confirm the location with us before booking.
+We also created
+[a list with good options][airbnb] on AirBnB.
+
+[holiday_inn]: https://goo.gl/maps/RVxAZFCCAXZoAxon9
+[pearl]: https://goo.gl/maps/7hjch9G8Z6vj39dx7
+[airbnb]: https://www.airbnb.fr/wishlists/v/1066413648
+"""
 
 
 aboutEgyptContent : String
 aboutEgyptContent =
     """
-  # Transportation
+# Transportation
 
-  Cairo is a very big and densely populated city that’s notorious for its traffic.
-  The best way to get around in Cairo is either with Uber or by taking the metro.
+Cairo is a very big and densely populated city that’s notorious for its traffic.
+The best way to get around in Cairo is either with Uber or by taking the metro.
 
-  For Uber, it is advisable to install the Uber application beforehand and
-  to link it with a credit card,
-  this will save you a lot of hassle since not all the drivers are very good at
-  English.
-  The prices for Uber rides are very reasonable, but it is best to avoid the
-  rush hours when both prices and the time you will spend in the car can go up
-  quite a lot.
+For Uber, it is advisable to install the Uber application beforehand and
+to link it with a credit card,
+this will save you a lot of hassle since not all the drivers are very good at
+English.
+The prices for Uber rides are very reasonable, but it is best to avoid the
+rush hours when both prices and the time you will spend in the car can go up
+quite a lot.
 
-  Alternatively, you can use the Cairo Metro.
-  The metro is very cheap and does not get stuck in the busy Cairo traffic.
-  Be aware that it can also get very busy in rush hour though.
-  If your location is not close to a metro station,
-  there is still the option to take an Uber for the final part of your journey,
-  but to do part of the journey by metro to avoid traffic.
+Alternatively, you can use the Cairo Metro.
+The metro is very cheap and does not get stuck in the busy Cairo traffic.
+Be aware that it can also get very busy in rush hour though.
+If your location is not close to a metro station,
+there is still the option to take an Uber for the final part of your journey,
+but to do part of the journey by metro to avoid traffic.
 
-  Walking is also an option, if you do not need to go far.
-  Be careful though when walking in busy streets or when crossing the street.
+Walking is also an option, if you do not need to go far.
+Be careful though when walking in busy streets or when crossing the street.
 
-  # Food and drinks
+# Food and drinks
 
-  Cairo has everything to offer when it comes to food, and quality and hygiene
-  standards are very good.
-  When staying in Maadi, we can recommend the following restaurants:
-  1. [Lokali](https://goo.gl/maps/6GxZSeZTnYnXJDzLA) has a great garden and very
-     nice fresh food
-  1. [Ovio](https://goo.gl/maps/zc5cu8QqxQ7mwfvWA) is great for breakfast or
-     lunch
-  1. [Zooba](https://goo.gl/maps/tNtdtaLuN5TrfirH6) has great taameyya, the
-     Egyptian version of falafel, and other kinds of "street food".
-     This street offers many more options and is one of the main streets in
-     Maadi for food and drinks
+Cairo has everything to offer when it comes to food, and quality and hygiene
+standards are very good.
+When staying in Maadi, we can recommend the following restaurants:
+1. [Lokali](https://goo.gl/maps/6GxZSeZTnYnXJDzLA) has a great garden and very
+   nice fresh food
+1. [Ovio](https://goo.gl/maps/zc5cu8QqxQ7mwfvWA) is great for breakfast or
+   lunch
+1. [Zooba](https://goo.gl/maps/tNtdtaLuN5TrfirH6) has great taameyya, the
+   Egyptian version of falafel, and other kinds of "street food".
+   This street offers many more options and is one of the main streets in
+   Maadi for food and drinks
 
-  We can recommend a lot more places, also in other areas, so do not hesitate
-  to ask!
+We can recommend a lot more places, also in other areas, so do not hesitate
+to ask!
 
-  Regarding water, it is best to avoid drinking tap water, and to buy bottled
-  water instead or to use the water dispenser in your hotel or apartment if
-  there is one.
-  Cooking or brushing your teeth with tap water is perfectly fine though.
-  """
+Regarding water, it is best to avoid drinking tap water, and to buy bottled
+water instead or to use the water dispenser in your hotel or apartment if
+there is one.
+Cooking or brushing your teeth with tap water is perfectly fine though.
+"""
 
 
 introBackgroundColour : Color

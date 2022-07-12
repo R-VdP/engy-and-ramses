@@ -1,13 +1,11 @@
-module Main exposing (main)
+module Main exposing (Model, Msg, main)
 
 import Browser
 import Browser.Dom as Dom
 import Browser.Events as BrowserE
 import Content
     exposing
-        ( aboutEgyptContent
-        , accomodationContent
-        , almostWhite
+        ( almostWhite
         , arabicFont
         , blackTransparent
         , darkYellow
@@ -71,10 +69,13 @@ import Element.Background as Background
 import Element.Border as Border
 import Element.Font as Font
 import Element.Input as Input
-import Html as Html exposing (Html)
+import Element.Lazy exposing (lazy)
+import Html exposing (Html)
 import Html.Attributes as HtmlA exposing (id, style)
 import Json.Encode
-import Markdown
+import Markdown.Block as MdBlock
+import Markdown.Parser
+import MdRendering
 import Task
 
 
@@ -141,8 +142,15 @@ type Msg
     | NoOp
 
 
+type alias ParsedMarkdown =
+    Result String (List MdBlock.Block)
+
+
 type alias Model =
-    { windowSize : WindowSize }
+    { windowSize : WindowSize
+    , accomodationContent : ParsedMarkdown
+    , aboutEgyptContent : ParsedMarkdown
+    }
 
 
 type alias Event =
@@ -152,6 +160,13 @@ type alias Event =
     , location2 : String
     , mapsUrl : String
     }
+
+
+parseMarkdown : String -> ParsedMarkdown
+parseMarkdown =
+    Result.mapError
+        (String.join "\n" << List.map Markdown.Parser.deadEndToString)
+        << Markdown.Parser.parse
 
 
 init : () -> ( Model, Cmd Msg )
@@ -168,7 +183,10 @@ init _ =
                 , height = floor vp.viewport.height
                 }
     in
-    ( { windowSize = { width = 0, height = 0 } }
+    ( { windowSize = { width = 0, height = 0 }
+      , accomodationContent = parseMarkdown Content.accomodationContent
+      , aboutEgyptContent = parseMarkdown Content.aboutEgyptContent
+      }
     , Task.perform handleViewportInfo Dom.getViewport
     )
 
@@ -180,7 +198,9 @@ update msg model =
             ( model, Cmd.none )
 
         WindowResized { width, height } ->
-            ( { windowSize = { width = width, height = height } }, Cmd.none )
+            ( { model | windowSize = { width = width, height = height } }
+            , Cmd.none
+            )
 
         GoToPage page ->
             ( model, jumpToPage page )
@@ -210,9 +230,9 @@ jumpToPage =
         << pageId
 
 
-mkMarkdownPage : Page -> String -> Element Msg
+mkMarkdownPage : Page -> ParsedMarkdown -> Element Msg
 mkMarkdownPage page =
-    mkStdTxtPage page << Markdown.markdownView_
+    mkStdTxtPage page << MdRendering.viewMarkdown
 
 
 mkStdTxtPage : Page -> List (Element Msg) -> Element Msg
@@ -278,7 +298,7 @@ view model =
             ]
         , inFront <| el [ width windowWidth ] menu
         ]
-        (viewElement model)
+        (lazy viewElement model)
 
 
 menu : Element Msg
@@ -323,10 +343,10 @@ viewElement model =
         , Background.color almostWhite
         , Font.color textColour
         ]
-        [ viewIntro model
-        , viewEvents model
-        , viewAccomodation model
-        , viewAboutEgypt model
+        [ lazy viewIntro model.windowSize
+        , viewEvents
+        , lazy viewAccomodation model.accomodationContent
+        , lazy viewAboutEgypt model.aboutEgyptContent
         ]
 
 
@@ -350,8 +370,8 @@ viewPoem =
         List.map lineToParagraph poemLines
 
 
-viewIntro : Model -> Element Msg
-viewIntro { windowSize } =
+viewIntro : WindowSize -> Element Msg
+viewIntro windowSize =
     let
         showLargeVerticalPhotos : Bool
         showLargeVerticalPhotos =
@@ -562,8 +582,8 @@ screenSizeLimits windowWidth windowHeight =
     List.any (\( w, h ) -> windowWidth >= w && windowHeight >= h)
 
 
-viewEvents : Model -> Element Msg
-viewEvents _ =
+viewEvents : Element Msg
+viewEvents =
     let
         officiationEvent : Event
         officiationEvent =
@@ -648,13 +668,13 @@ viewEventSummary event =
         ]
 
 
-viewAccomodation : Model -> Element Msg
-viewAccomodation _ =
-    mkMarkdownPage Accommodation accomodationContent
+viewAccomodation : ParsedMarkdown -> Element Msg
+viewAccomodation =
+    mkMarkdownPage Accommodation
 
 
-viewAboutEgypt : Model -> Element Msg
-viewAboutEgypt _ =
+viewAboutEgypt : ParsedMarkdown -> Element Msg
+viewAboutEgypt =
     let
         trafficVideo : Element Msg
         trafficVideo =
@@ -681,4 +701,4 @@ viewAboutEgypt _ =
                     ]
                     []
     in
-    mkMarkdownPage AboutEgypt aboutEgyptContent
+    mkMarkdownPage AboutEgypt

@@ -1,6 +1,6 @@
-module Markdown exposing (..)
+module MdRendering exposing (viewMarkdown)
 
-import Content exposing (fontSizeScaled)
+import Content exposing (fontSizeScaled, introBackgroundColour, titleFont)
 import Element
     exposing
         ( Element
@@ -24,13 +24,12 @@ import Html
 import Html.Attributes
 import Markdown.Block as Block exposing (ListItem(..), Task(..))
 import Markdown.Html
-import Markdown.Parser
 import Markdown.Renderer
 
 
-markdownView_ : String -> List (Element msg)
-markdownView_ md =
-    case markdownView md of
+viewMarkdown : Result String (List Block.Block) -> List (Element msg)
+viewMarkdown blocks =
+    case Result.andThen render blocks of
         Ok els ->
             els
 
@@ -38,11 +37,9 @@ markdownView_ md =
             [ text err ]
 
 
-markdownView : String -> Result String (List (Element msg))
-markdownView =
-    Result.andThen (Markdown.Renderer.render elmUiRenderer)
-        << Result.mapError (String.join "\n" << List.map Markdown.Parser.deadEndToString)
-        << Markdown.Parser.parse
+render : List Block.Block -> Result String (List (Element msg))
+render =
+    Markdown.Renderer.render elmUiRenderer
 
 
 elmUiRenderer : Markdown.Renderer.Renderer (Element msg)
@@ -133,7 +130,7 @@ heading { level, rawText, children } =
     Element.paragraph
         [ case level of
             Block.H1 ->
-                fontSizeScaled 3
+                fontSizeScaled 4
 
             Block.H2 ->
                 fontSizeScaled 2
@@ -141,10 +138,16 @@ heading { level, rawText, children } =
             _ ->
                 fontSizeScaled 1
         , Font.bold
+        , Font.color introBackgroundColour
+        , Font.family [ titleFont ]
         , Element.htmlAttribute
-            (Html.Attributes.attribute "name" (rawTextToId rawText))
+            << Html.Attributes.attribute "name"
+          <|
+            rawTextToId rawText
         , Element.htmlAttribute
-            (Html.Attributes.id (rawTextToId rawText))
+            << Html.Attributes.id
+          <|
+            rawTextToId rawText
         ]
         children
 
