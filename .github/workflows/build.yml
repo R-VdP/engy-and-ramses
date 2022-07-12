@@ -37,7 +37,7 @@ jobs:
         if: >-
           ( github.event_name == 'push' ||
             github.event_name == 'workflow_dispatch' ) &&
-          github.ref == 'refs/heads/master'
+          github.ref == 'refs/heads/main'
         uses: "actions/checkout@v3"
         with:
           ref: 'gh-pages'
@@ -64,7 +64,7 @@ jobs:
         if: >-
           ( github.event_name == 'push' ||
             github.event_name == 'workflow_dispatch' ) &&
-          github.ref == 'refs/heads/master'
+          github.ref == 'refs/heads/main'
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
