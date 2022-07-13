@@ -1,4 +1,4 @@
-module Main exposing (Model, Msg, ParsedMarkdown, WindowSize, main)
+port module Main exposing (Model, Msg, ParsedMarkdown, main)
 
 import Browser
 import Browser.Dom as Dom
@@ -16,10 +16,11 @@ import Content
         , mainTitleColour
         , maxContentTextWidth
         , maxContentWidth
-        , menuFontSize
+        , minWindowWidth
         , paddingScaled
         , pageMenuButtonPadding
         , poemLines
+        , scaleFontSize
         , scaleSpacing
         , spacingScaled
         , subtitleColour
@@ -68,13 +69,25 @@ import Element.Background as Background
 import Element.Border as Border
 import Element.Font as Font
 import Element.Input as Input
-import Element.Lazy exposing (lazy, lazy2)
+import Element.Lazy exposing (lazy, lazy2, lazy3)
 import Html exposing (Html)
 import Html.Attributes exposing (id, style, title)
+import Json.Decode as JDecode
 import Markdown.Block as MdBlock
 import Markdown.Parser
 import MdRendering exposing (rawTextToId)
 import Task
+import Types exposing (Height(..), Width(..), WindowSize, widthToInt)
+
+
+{-| Make a request to receive window.innerWidth and window.innerHeight from JS.
+-}
+port getInnerDimensions : () -> Cmd msg
+
+
+{-| Receive window.innerWidth and window.innerHeight as a JSON value.
+-}
+port receiveInnerDimensions : (JDecode.Value -> msg) -> Sub msg
 
 
 main : Program () Model Msg
@@ -83,13 +96,17 @@ main =
         { init = init
         , update = update
         , subscriptions = subscriptions
-        , view = \model -> { title = "Engy & Ramses", body = [ view model ] }
+        , view =
+            \model ->
+                { title = "Engy & Ramses"
+                , body = [ view model ]
+                }
         }
 
 
 type alias Page =
     { title : String
-    , shortTitle : Maybe String
+    , shortTitle : Maybe String -- If Nothing then we simply reuse the main title
     , view : Model -> String -> Element Msg
     }
 
@@ -102,15 +119,15 @@ pages =
       }
     , { title = "Events"
       , shortTitle = Nothing
-      , view = always <| lazy viewEvents
+      , view = \model -> lazy2 viewEvents model.windowSize.width
       }
     , { title = "Accommodation"
       , shortTitle = Nothing
-      , view = always <| lazy2 mkMarkdownPage accomodationContent
+      , view = \model -> lazy3 mkMarkdownPage model.windowSize.width accomodationContent
       }
     , { title = "About Egypt"
       , shortTitle = Just "Egypt"
-      , view = always <| lazy2 mkMarkdownPage aboutEgyptContent
+      , view = \model -> lazy3 mkMarkdownPage model.windowSize.width aboutEgyptContent
       }
     ]
 
@@ -151,14 +168,14 @@ titleToIdAttr =
     htmlAttribute << id << titleToId
 
 
-type alias WindowSize =
-    { width : Int, height : Int }
-
-
 type Msg
     = GoToPage Page
     | WindowResized WindowSize
     | NoOp
+
+
+
+-- TODO no need for Model to be a record anymore
 
 
 type alias Model =
@@ -177,21 +194,8 @@ type alias Event =
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    let
-        {- We use floor since Browser.Event.onResize returns only Ints.
-           We will only use this info to estimate the size of the window,
-           so the loss of accuracy is not really important here.
-        -}
-        handleViewportInfo : Dom.Viewport -> Msg
-        handleViewportInfo vp =
-            WindowResized
-                { width = floor vp.viewport.width
-                , height = floor vp.viewport.height
-                }
-    in
-    ( { windowSize = { width = 0, height = 0 }
-      }
-    , Task.perform handleViewportInfo Dom.getViewport
+    ( { windowSize = { width = MkWidth 0, height = MkHeight 0 } }
+    , getInnerDimensions ()
     )
 
 
@@ -201,78 +205,91 @@ update msg model =
         NoOp ->
             ( model, Cmd.none )
 
-        WindowResized { width, height } ->
-            ( { model | windowSize = { width = width, height = height } }
+        WindowResized newSize ->
+            ( { model | windowSize = newSize }
             , Cmd.none
             )
 
         GoToPage page ->
-            ( model, jumpToPage page )
+            ( model, jumpToPage model.windowSize.width page )
 
 
 subscriptions : Model -> Sub Msg
 subscriptions _ =
-    BrowserE.onResize
-        (\w h ->
-            WindowResized { width = w, height = h }
-        )
+    let
+        intFieldDecoder : String -> JDecode.Decoder Int
+        intFieldDecoder fieldName =
+            JDecode.field fieldName JDecode.int
+
+        innerDimensionsDecoder : JDecode.Decoder Msg
+        innerDimensionsDecoder =
+            JDecode.map2 (\w h -> WindowResized { width = w, height = h })
+                (JDecode.map MkWidth <| intFieldDecoder "innerWidth")
+                (JDecode.map MkHeight <| intFieldDecoder "innerHeight")
+
+        decodeInnerDimensions : JDecode.Value -> Msg
+        decodeInnerDimensions =
+            Result.withDefault NoOp
+                << JDecode.decodeValue innerDimensionsDecoder
+    in
+    receiveInnerDimensions decodeInnerDimensions
 
 
-headerHeight : Int
-headerHeight =
-    menuFontSize + 2 * pageMenuButtonPadding
+headerHeight : Width -> Int
+headerHeight width =
+    menuFontSize width + 2 * pageMenuButtonPadding width
 
 
-jumpToPage : Page -> Cmd Msg
-jumpToPage =
+jumpToPage : Width -> Page -> Cmd Msg
+jumpToPage windowWidth =
     Task.attempt (always NoOp)
         << Task.andThen
             (\info ->
-                Dom.setViewport info.element.x (info.element.y - toFloat headerHeight)
+                Dom.setViewport info.element.x (info.element.y - toFloat (headerHeight windowWidth))
             )
         << Dom.getElement
         << titleToId
         << .title
 
 
-mkMarkdownPage : ParsedMarkdown -> String -> Element Msg
-mkMarkdownPage parsed title =
-    mkStdTxtPage title <| MdRendering.viewMarkdown parsed
+mkMarkdownPage : Width -> ParsedMarkdown -> String -> Element Msg
+mkMarkdownPage windowWidth parsed title =
+    mkStdTxtPage windowWidth title <| MdRendering.viewMarkdown windowWidth parsed
 
 
-mkStdTxtPage : String -> List (Element Msg) -> Element Msg
-mkStdTxtPage title =
-    mkPage title
+mkStdTxtPage : Width -> String -> List (Element Msg) -> Element Msg
+mkStdTxtPage windowWidth title =
+    mkPage windowWidth title
         << el
             [ width fill
-            , paddingScaled 11
+            , paddingScaled windowWidth 11
             ]
         << textColumn
             [ width <| maximum maxContentTextWidth fill
             , centerX
             , Font.justify
-            , spacingScaled 13
+            , spacingScaled windowWidth 13
             ]
 
 
-mkPage : String -> Element Msg -> Element Msg
-mkPage title content =
+mkPage : Width -> String -> Element Msg -> Element Msg
+mkPage windowWidth title content =
     column
         [ titleToIdAttr title
         , width fill
-        , paddingScaled 11
-        , spacingScaled 13
+        , paddingScaled windowWidth 11
+        , spacingScaled windowWidth 13
         ]
-        [ viewPageTitle title
+        [ viewPageTitle windowWidth title
         , content
         ]
 
 
-viewPageTitle : String -> Element Msg
-viewPageTitle title =
+viewPageTitle : Width -> String -> Element Msg
+viewPageTitle windowWidth title =
     paragraph
         [ alignTop
-        , fontSizeScaled 7
+        , fontSizeScaled windowWidth 7
         , Font.bold
         , Font.center
         , Font.color titleColour
@@ -292,22 +309,22 @@ view model =
 
         windowWidth : Length
         windowWidth =
-            minimum 350 fill
+            minimum minWindowWidth fill
     in
     Element.layoutWith { options = [ Element.focusStyle focusStyle ] }
         [ width windowWidth
-        , fontSizeScaled -1
+        , fontSizeScaled model.windowSize.width -1
         , Font.family
             [ mainFont
             , Font.serif
             ]
-        , inFront <| el [ width windowWidth ] menu
+        , inFront << el [ width windowWidth ] <| lazy menu model.windowSize.width
         ]
         (lazy viewElement model)
 
 
-menu : Element Msg
-menu =
+menu : Width -> Element Msg
+menu windowWidth =
     el
         [ width fill
         , Background.color blackTransparent
@@ -316,21 +333,30 @@ menu =
         wrappedRow
             [ centerX
             , alignTop
-            , Font.size menuFontSize
+            , Font.size <| menuFontSize windowWidth
             , Font.color almostWhite
             ]
-            (List.map pageMenuButton pages)
+            (List.map (pageMenuButton windowWidth) pages)
 
 
-pageMenuButton : Page -> Element Msg
-pageMenuButton page =
+menuFontSize : Width -> Int
+menuFontSize width =
+    scaleFontSize width 0
+
+
+pageMenuButton : Width -> Page -> Element Msg
+pageMenuButton width page =
     Input.button
         [ Border.width 0
         , Font.bold
         ]
         { onPress = Just (GoToPage page)
         , label =
-            el [ padding pageMenuButtonPadding ] << text << pageShortTitle <| page
+            el [ padding <| pageMenuButtonPadding width ]
+                << text
+                << pageShortTitle
+            <|
+                page
         }
 
 
@@ -338,15 +364,15 @@ viewElement : Model -> Element Msg
 viewElement model =
     column
         [ width fill
-        , spacingScaled 14
+        , spacingScaled model.windowSize.width 14
         , Background.color almostWhite
         , Font.color textColour
         ]
         (List.map (\p -> p.view model p.title) pages)
 
 
-viewPoem : Element Msg
-viewPoem =
+viewPoem : Width -> Element Msg
+viewPoem windowWidth =
     let
         lineToStr =
             String.fromList << List.map Char.fromCode
@@ -356,10 +382,10 @@ viewPoem =
     in
     textColumn
         [ width fill
-        , fontSizeScaled 3
+        , fontSizeScaled windowWidth 3
         , Font.family [ arabicFont ]
         , Font.color subtitleColour
-        , spacingScaled 13
+        , spacingScaled windowWidth 13
         ]
     <|
         List.map lineToParagraph poemLines
@@ -411,7 +437,7 @@ viewIntro windowSize title =
             el
                 [ width shrink
                 , height shrink
-                , Border.width <| scaleSpacing 9
+                , Border.width <| scaleSpacing windowSize.width 9
                 , Border.color almostWhite
                 , Background.color almostWhite
                 , rotate angle
@@ -484,17 +510,17 @@ viewIntro windowSize title =
                 desertPhoto 200
 
         introBaseHeight =
-            ceiling <| toFloat windowSize.width * tan (pi / 32) / 2
+            ceiling <| toFloat (widthToInt windowSize.width) * tan (pi / 32) / 2
     in
     column [ titleToIdAttr title, width fill ]
         [ column
             [ width fill
             , htmlAttribute <| style "height" "100vh"
             , htmlAttribute <| style "min-height" "100vh"
-            , paddingScaled 5
+            , paddingScaled windowSize.width 5
             , Background.color introBackgroundColour
             ]
-            [ el [ height <| px headerHeight ] Element.none
+            [ el [ height << px <| headerHeight windowSize.width ] Element.none
             , el
                 [ centerY
                 , width fill
@@ -513,16 +539,11 @@ viewIntro windowSize title =
                 textColumn
                     [ centerY
                     , width fill
-                    , spacingScaled 17
+                    , spacingScaled windowSize.width 17
                     ]
                     [ paragraph
                         [ Font.center
-                        , fontSizeScaled <|
-                            if windowSize.width >= 380 then
-                                11
-
-                            else
-                                9
+                        , fontSizeScaled windowSize.width 11
                         , Font.color mainTitleColour
                         , Font.bold
                         , Font.family
@@ -531,10 +552,10 @@ viewIntro windowSize title =
                             ]
                         ]
                         [ text "Engy & Ramses" ]
-                    , viewPoem
+                    , viewPoem windowSize.width
                     , paragraph
                         [ Font.center
-                        , fontSizeScaled 3
+                        , fontSizeScaled windowSize.width 3
                         , Font.color subtitleColour
                         , Font.family
                             [ titleFont
@@ -552,11 +573,19 @@ viewIntro windowSize title =
             -- to height fill and center the pictures in their surrounding
             -- element.
             , if showLargeHorizontalPhotos then
-                el [ width fill, height <| fillPortion 1, paddingScaled 8 ]
+                el
+                    [ width fill
+                    , height <| fillPortion 1
+                    , paddingScaled windowSize.width 8
+                    ]
                     horizontalPhotos
 
               else if showSmallHorizontalPhotos then
-                el [ width fill, height <| fillPortion 1, paddingScaled 8 ]
+                el
+                    [ width fill
+                    , height <| fillPortion 1
+                    , paddingScaled windowSize.width 8
+                    ]
                     smallHorizontalPhotos
 
               else
@@ -572,13 +601,13 @@ viewIntro windowSize title =
         ]
 
 
-screenSizeLimits : Int -> Int -> List ( Int, Int ) -> Bool
-screenSizeLimits windowWidth windowHeight =
-    List.any (\( w, h ) -> windowWidth >= w && windowHeight >= h)
+screenSizeLimits : Width -> Height -> List ( Int, Int ) -> Bool
+screenSizeLimits (MkWidth width) (MkHeight height) =
+    List.any (\( w, h ) -> width >= w && height >= h)
 
 
-viewEvents : String -> Element Msg
-viewEvents title =
+viewEvents : Width -> String -> Element Msg
+viewEvents windowWidth title =
     let
         officiationEvent : Event
         officiationEvent =
@@ -602,21 +631,22 @@ viewEvents title =
         viewEvent =
             el
                 [ width fill
-                , paddingXY (scaleSpacing 11) (scaleSpacing 8)
+                , paddingXY (scaleSpacing windowWidth 11)
+                    (scaleSpacing windowWidth 8)
                 ]
-                << viewEventSummary
+                << viewEventSummary windowWidth
     in
-    mkPage title <|
+    mkPage windowWidth title <|
         column
             [ width <| maximum maxContentWidth fill
             , centerX
-            , spacingScaled 13
+            , spacingScaled windowWidth 13
             ]
             [ wrappedRow [ width fill ]
                 [ viewEvent officiationEvent
                 , viewEvent partyEvent
                 ]
-            , el [ width fill, paddingScaled 11 ] <|
+            , el [ width fill, paddingScaled windowWidth 11 ] <|
                 textColumn
                     [ width <| maximum maxContentTextWidth fill
                     , centerX
@@ -630,23 +660,23 @@ viewEvents title =
             ]
 
 
-viewEventSummary : Event -> Element Msg
-viewEventSummary event =
+viewEventSummary : Width -> Event -> Element Msg
+viewEventSummary windowWidth event =
     column
         [ width <| maximum 290 fill
         , height shrink
         , Border.color introBackgroundColour
-        , Border.width << scaleSpacing <| 0
+        , Border.width <| scaleSpacing windowWidth 0
         , Border.solid
         , Border.rounded 3
-        , spacingScaled 11
+        , spacingScaled windowWidth 11
 
         -- TODO can we replace this by spacing on the row containing these?
-        , paddingScaled 5
+        , paddingScaled windowWidth 5
         , centerX
         ]
         [ el
-            [ fontSizeScaled 4
+            [ fontSizeScaled windowWidth 4
             , Font.bold
             , Font.color introBackgroundColour
             , Font.family [ titleFont ]
@@ -666,7 +696,7 @@ viewEventSummary event =
             , label =
                 el
                     [ centerX
-                    , paddingScaled 6
+                    , paddingScaled windowWidth 6
                     , Background.color darkYellow
                     , Font.color textColour
                     , Font.regular

@@ -1,6 +1,12 @@
 module MdRendering exposing (rawTextToId, viewMarkdown)
 
-import Content exposing (fontSizeScaled, introBackgroundColour, titleFont)
+import Content
+    exposing
+        ( fontSizeScaled
+        , introBackgroundColour
+        , spacingScaled
+        , titleFont
+        )
 import Element
     exposing
         ( Element
@@ -30,26 +36,29 @@ import Html.Attributes
 import Markdown.Block as Block exposing (ListItem(..), Task(..))
 import Markdown.Html
 import Markdown.Renderer
+import Types exposing (Width, handleResult)
 
 
-viewMarkdown : Result String (List Block.Block) -> List (Element msg)
-viewMarkdown blocks =
-    case Result.andThen render blocks of
-        Ok els ->
-            els
-
-        Err err ->
-            [ text err ]
-
-
-render : List Block.Block -> Result String (List (Element msg))
-render =
-    Markdown.Renderer.render elmUiRenderer
+viewMarkdown :
+    Width
+    -> Result String (List Block.Block)
+    -> List (Element msg)
+viewMarkdown width blocks =
+    handleResult
+        (List.singleton << text)
+        identity
+    <|
+        Result.andThen (render width) blocks
 
 
-elmUiRenderer : Markdown.Renderer.Renderer (Element msg)
-elmUiRenderer =
-    { heading = heading
+render : Width -> List Block.Block -> Result String (List (Element msg))
+render width =
+    Markdown.Renderer.render <| elmUiRenderer width
+
+
+elmUiRenderer : Width -> Markdown.Renderer.Renderer (Element msg)
+elmUiRenderer windowWidth =
+    { heading = heading windowWidth
     , paragraph = paragraph []
     , thematicBreak = Element.none
     , text = text
@@ -76,10 +85,10 @@ elmUiRenderer =
             , Background.color (rgb255 245 245 245)
             ]
     , unorderedList =
-        column [ spacing 15 ]
+        column [ spacingScaled windowWidth 13 ]
             << List.map
                 (\(ListItem task children) ->
-                    row [ spacing 5 ]
+                    row [ spacingScaled windowWidth 13 ]
                         [ el
                             [ alignTop
                             , width shrink
@@ -99,7 +108,7 @@ elmUiRenderer =
                 )
     , orderedList =
         \startingIndex ->
-            column [ spacing 15 ]
+            column [ spacingScaled windowWidth 13 ]
                 << List.indexedMap
                     (\index itemBlocks ->
                         row [ spacing 5 ]
@@ -126,22 +135,24 @@ elmUiRenderer =
 
 
 heading :
-    { level : Block.HeadingLevel
-    , rawText : String
-    , children : List (Element msg)
-    }
+    Width
+    ->
+        { level : Block.HeadingLevel
+        , rawText : String
+        , children : List (Element msg)
+        }
     -> Element msg
-heading { level, rawText, children } =
+heading windowWidth { level, rawText, children } =
     paragraph
         [ case level of
             Block.H1 ->
-                fontSizeScaled 4
+                fontSizeScaled windowWidth 4
 
             Block.H2 ->
-                fontSizeScaled 2
+                fontSizeScaled windowWidth 2
 
             _ ->
-                fontSizeScaled 1
+                fontSizeScaled windowWidth 1
         , Font.bold
         , Font.color introBackgroundColour
         , Font.family [ titleFont ]

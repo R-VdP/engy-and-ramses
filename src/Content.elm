@@ -8,6 +8,7 @@ import Element
         , rgba255
         )
 import Element.Font as Font exposing (Font)
+import Types exposing (Width(..))
 
 
 accomodation : String
@@ -202,39 +203,59 @@ arabicFont =
     Font.typeface "Gulzar"
 
 
-scaleFontSize : Int -> Int
-scaleFontSize =
-    round << Element.modular 20 1.15
+scalingBase : Width -> ( Float, Float, Float ) -> Float
+scalingBase (MkWidth width) ( normal, smaller, smallest ) =
+    if width > 380 then
+        normal
+
+    else if width >= 310 then
+        smaller
+
+    else
+        smallest
 
 
-fontSizeScaled : Int -> Attribute msg
-fontSizeScaled =
-    Font.size << scaleFontSize
+scaleFontSize : Width -> Int -> Int
+scaleFontSize width =
+    let
+        base =
+            scalingBase width ( 20, 16, 12 )
+    in
+    round << Element.modular base 1.15
 
 
-scaleSpacing : Int -> Int
-scaleSpacing =
-    round << Element.modular 5 1.15
+fontSizeScaled : Width -> Int -> Attribute msg
+fontSizeScaled width =
+    Font.size << scaleFontSize width
 
 
-spacingScaled : Int -> Attribute msg
-spacingScaled =
-    Element.spacing << scaleSpacing
+scaleSpacing : Width -> Int -> Int
+scaleSpacing width =
+    let
+        base =
+            scalingBase width ( 5, 3, 1 )
+    in
+    round << Element.modular base 1.15
 
 
-paddingScaled : Int -> Attribute msg
-paddingScaled =
-    Element.padding << scaleSpacing
+spacingScaled : Width -> Int -> Attribute msg
+spacingScaled width =
+    Element.spacing << scaleSpacing width
 
 
-menuFontSize : Int
-menuFontSize =
-    scaleFontSize 0
+paddingScaled : Width -> Int -> Attribute msg
+paddingScaled width =
+    Element.padding << scaleSpacing width
 
 
-pageMenuButtonPadding : Int
-pageMenuButtonPadding =
-    scaleSpacing 0
+pageMenuButtonPadding : Width -> Int
+pageMenuButtonPadding width =
+    scaleSpacing width 0
+
+
+minWindowWidth : Int
+minWindowWidth =
+    230
 
 
 maxContentWidth : Int

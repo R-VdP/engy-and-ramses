@@ -16,7 +16,18 @@
     const loadMain = document.createElement("script")
     document.head.appendChild(loadMain)
     loadMain.onload = function() {
-      Elm.Main.init({})
+      const app = Elm.Main.init({})
+
+      const sendInnerDimensions = function() {
+        app.ports.receiveInnerDimensions.send(
+          { "innerWidth":  window.innerWidth
+          , "innerHeight": window.innerHeight
+          }
+        )
+      }
+
+      app.ports.getInnerDimensions.subscribe(sendInnerDimensions)
+      window.addEventListener("resize", sendInnerDimensions);
     }
     loadMain.src = "generated/Main.js?r=" + Math.floor(Math.random() * 100000);
   </script>
