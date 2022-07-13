@@ -586,9 +586,6 @@ viewIntro windowSize title =
                         [ text <|
                             "We would like you to join us "
                                 ++ "in celebrating our marriage"
-                                ++ (String.fromInt <|
-                                        heightToInt windowSize.height
-                                   )
                         ]
                     ]
 
