@@ -2,7 +2,6 @@ port module Main exposing (Model, Msg, ParsedMarkdown, main)
 
 import Browser
 import Browser.Dom as Dom
-import Browser.Events as BrowserE
 import Content
     exposing
         ( almostWhite
@@ -71,7 +70,7 @@ import Element.Font as Font
 import Element.Input as Input
 import Element.Lazy exposing (lazy, lazy2, lazy3)
 import Html exposing (Html)
-import Html.Attributes exposing (id, style, title)
+import Html.Attributes exposing (id, style)
 import Json.Decode as JDecode
 import Markdown.Block as MdBlock
 import Markdown.Parser
@@ -301,6 +300,7 @@ viewPageTitle windowWidth title =
 view : Model -> Html Msg
 view model =
     let
+        focusStyle : Element.FocusStyle
         focusStyle =
             { borderColor = Nothing
             , backgroundColor = Nothing
@@ -374,9 +374,11 @@ viewElement model =
 viewPoem : Width -> Element Msg
 viewPoem windowWidth =
     let
+        lineToStr : List Int -> String
         lineToStr =
             String.fromList << List.map Char.fromCode
 
+        lineToParagraph : List Int -> Element Msg
         lineToParagraph =
             paragraph [ Font.center ] << List.singleton << text << lineToStr
     in
@@ -509,6 +511,7 @@ viewIntro windowSize title =
             <|
                 desertPhoto 200
 
+        introBaseHeight : Int
         introBaseHeight =
             ceiling <| toFloat (widthToInt windowSize.width) * tan (pi / 32) / 2
     in

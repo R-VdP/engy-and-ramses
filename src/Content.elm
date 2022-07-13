@@ -1,4 +1,29 @@
-module Content exposing (..)
+module Content exposing
+    ( aboutEgypt
+    , accomodation
+    , almostWhite
+    , arabicFont
+    , blackTransparent
+    , darkYellow
+    , fontSizeScaled
+    , introBackgroundColour
+    , introFont
+    , mainFont
+    , mainTitleColour
+    , maxContentTextWidth
+    , maxContentWidth
+    , minWindowWidth
+    , paddingScaled
+    , pageMenuButtonPadding
+    , poemLines
+    , scaleFontSize
+    , scaleSpacing
+    , spacingScaled
+    , subtitleColour
+    , textColour
+    , titleColour
+    , titleFont
+    )
 
 import Element
     exposing
@@ -218,6 +243,7 @@ scalingBase (MkWidth width) ( normal, smaller, smallest ) =
 scaleFontSize : Width -> Int -> Int
 scaleFontSize width =
     let
+        base : Float
         base =
             scalingBase width ( 20, 16, 12 )
     in
@@ -232,6 +258,7 @@ fontSizeScaled width =
 scaleSpacing : Width -> Int -> Int
 scaleSpacing width =
     let
+        base : Float
         base =
             scalingBase width ( 5, 3, 1 )
     in
@@ -268,16 +295,6 @@ maxContentTextWidth =
     700
 
 
-white : Color
-white =
-    rgb255 255 255 255
-
-
-black : Color
-black =
-    rgb255 0 0 0
-
-
 almostBlack : Color
 almostBlack =
     rgb255 68 68 68
@@ -288,24 +305,27 @@ blackTransparent =
     rgba255 0 0 0 0.4
 
 
-pastelBlue : Color
-pastelBlue =
-    rgb255 118 156 172
+
+{-
+   pastelBlue : Color
+   pastelBlue =
+       rgb255 118 156 172
 
 
-pastelLightBlue : Color
-pastelLightBlue =
-    rgb255 182 222 232
+   pastelLightBlue : Color
+   pastelLightBlue =
+       rgb255 182 222 232
 
 
-pastelYellow : Color
-pastelYellow =
-    rgb255 249 247 209
+   pastelYellow : Color
+   pastelYellow =
+       rgb255 249 247 209
 
 
-lemonYellow : Color
-lemonYellow =
-    rgb255 255 253 152
+   lemonYellow : Color
+   lemonYellow =
+       rgb255 255 253 152
+-}
 
 
 darkPink : Color
@@ -313,14 +333,17 @@ darkPink =
     rgb255 255 115 142
 
 
-lightPink : Color
-lightPink =
-    rgb255 255 197 209
+
+{-
+   lightPink : Color
+   lightPink =
+       rgb255 255 197 209
 
 
-mintGreen : Color
-mintGreen =
-    rgb255 200 253 233
+   mintGreen : Color
+   mintGreen =
+       rgb255 200 253 233
+-}
 
 
 darkYellow : Color
@@ -328,24 +351,27 @@ darkYellow =
     rgb255 255 233 123
 
 
-darkPastelBlue : Color
-darkPastelBlue =
-    rgb255 157 197 208
+
+{-
+   darkPastelBlue : Color
+   darkPastelBlue =
+       rgb255 157 197 208
 
 
-darkMintGreen : Color
-darkMintGreen =
-    rgb255 141 233 220
+   darkMintGreen : Color
+   darkMintGreen =
+       rgb255 141 233 220
 
 
-pastelRed : Color
-pastelRed =
-    rgb255 237 135 131
+   pastelRed : Color
+   pastelRed =
+       rgb255 237 135 131
 
 
-pastelLightBlue2 : Color
-pastelLightBlue2 =
-    rgb255 184 225 221
+   pastelLightBlue2 : Color
+   pastelLightBlue2 =
+       rgb255 184 225 221
+-}
 
 
 darkPastelGreen : Color
