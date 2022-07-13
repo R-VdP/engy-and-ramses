@@ -7,29 +7,39 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Arima+Madurai&family=Dancing+Script:wght@700&family=The+Nautigal:wght@700&family=Gulzar&display=swap" rel="stylesheet">
+  <link rel="prefetch" href="/assets/berlin.jpg" as="image">
+  <link rel="prefetch" href="/assets/cropped_desert.jpg" as="image">
   <script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "157dcef0f9c045d1aae83d9ae4a2ed92"}'></script>
   <title>Engy & Ramses</title>
 </head>
 <body>
   <script>
-    // Add a random query string to avoid caching
     const loadMain = document.createElement("script")
     document.head.appendChild(loadMain)
-    loadMain.onload = function() {
-      const app = Elm.Main.init({})
+    loadMain.onload = () => {
+      const introElementId = "intro-full-viewport"
 
-      const sendInnerDimensions = function() {
-        app.ports.receiveInnerDimensions.send(
-          { "innerWidth":  window.innerWidth
-          , "innerHeight": window.innerHeight
-          }
-        )
+      function getInnerDimensions() {
+        const element = document.getElementById(introElementId)
+        return {
+          width:  element ? element.clientWidth  : window.innerWidth,
+          height: element ? element.clientHeight : window.innerHeight
+        }
       }
 
-      app.ports.getInnerDimensions.subscribe(sendInnerDimensions)
-      window.addEventListener("resize", sendInnerDimensions);
+      function sendInnerDimensions() {
+        app.ports.receiveWindowSize.send(getInnerDimensions())
+      }
+
+      const app = Elm.Main.init({ flags: getInnerDimensions() })
+
+      // Can this cause issues if the observed element does not exist yet?
+      new ResizeObserver(entries => {
+        sendInnerDimensions()
+      }).observe(document.getElementById(introElementId))
     }
-    loadMain.src = "generated/Main.js?r=" + Math.floor(Math.random() * 100000);
+    // Add a random query string to avoid caching
+    loadMain.src = "generated/Main.js?r=" + Math.floor(Math.random() * 100000)
   </script>
 </body>
 </html>
