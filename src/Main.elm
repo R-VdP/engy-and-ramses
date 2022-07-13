@@ -43,6 +43,7 @@ import Element
         , fill
         , fillPortion
         , height
+        , html
         , htmlAttribute
         , image
         , inFront
@@ -71,25 +72,28 @@ import Element.Input as Input
 import Element.Lazy exposing (lazy, lazy2, lazy3)
 import Html exposing (Html)
 import Html.Attributes exposing (id, style)
-import Json.Decode as JDecode
+import Json.Decode as JDecode exposing (Error)
 import Markdown.Block as MdBlock
 import Markdown.Parser
 import MdRendering exposing (rawTextToId)
 import Task
-import Types exposing (Height(..), Width(..), WindowSize, widthToInt)
-
-
-{-| Make a request to receive window.innerWidth and window.innerHeight from JS.
--}
-port getInnerDimensions : () -> Cmd msg
+import Types
+    exposing
+        ( Height(..)
+        , Width(..)
+        , WindowSize
+        , heightToInt
+        , mkWindowSize
+        , widthToInt
+        )
 
 
 {-| Receive window.innerWidth and window.innerHeight as a JSON value.
 -}
-port receiveInnerDimensions : (JDecode.Value -> msg) -> Sub msg
+port receiveWindowSize : (JDecode.Value -> msg) -> Sub msg
 
 
-main : Program () Model Msg
+main : Program JDecode.Value Model Msg
 main =
     Browser.document
         { init = init
@@ -191,11 +195,38 @@ type alias Event =
     }
 
 
-init : () -> ( Model, Cmd Msg )
-init _ =
-    ( { windowSize = { width = MkWidth 0, height = MkHeight 0 } }
-    , getInnerDimensions ()
+{-| TODO: receive the intro-full-viewport ID from JS
+so that it's only defined in one spot
+-}
+init : JDecode.Value -> ( Model, Cmd Msg )
+init windowSizeValue =
+    let
+        defaultWindowSize : WindowSize
+        defaultWindowSize =
+            mkWindowSize (MkWidth 0) (MkHeight 0)
+    in
+    ( { windowSize =
+            decodeWindowSize defaultWindowSize mkWindowSize windowSizeValue
+      }
+    , Cmd.none
     )
+
+
+decodeWindowSize : a -> (Width -> Height -> a) -> JDecode.Value -> a
+decodeWindowSize def cont =
+    let
+        intFieldDecoder : String -> JDecode.Decoder Int
+        intFieldDecoder fieldName =
+            JDecode.field fieldName JDecode.int
+
+        windowSizeDecoder : JDecode.Decoder a
+        windowSizeDecoder =
+            JDecode.map2 cont
+                (JDecode.map MkWidth <| intFieldDecoder "width")
+                (JDecode.map MkHeight <| intFieldDecoder "height")
+    in
+    Result.withDefault def
+        << JDecode.decodeValue windowSizeDecoder
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -215,23 +246,9 @@ update msg model =
 
 subscriptions : Model -> Sub Msg
 subscriptions _ =
-    let
-        intFieldDecoder : String -> JDecode.Decoder Int
-        intFieldDecoder fieldName =
-            JDecode.field fieldName JDecode.int
-
-        innerDimensionsDecoder : JDecode.Decoder Msg
-        innerDimensionsDecoder =
-            JDecode.map2 (\w h -> WindowResized { width = w, height = h })
-                (JDecode.map MkWidth <| intFieldDecoder "innerWidth")
-                (JDecode.map MkHeight <| intFieldDecoder "innerHeight")
-
-        decodeInnerDimensions : JDecode.Value -> Msg
-        decodeInnerDimensions =
-            Result.withDefault NoOp
-                << JDecode.decodeValue innerDimensionsDecoder
-    in
-    receiveInnerDimensions decodeInnerDimensions
+    receiveWindowSize <|
+        decodeWindowSize NoOp
+            (\w h -> WindowResized <| mkWindowSize w h)
 
 
 headerHeight : Width -> Int
@@ -522,6 +539,7 @@ viewIntro windowSize title =
             , htmlAttribute <| style "min-height" "100vh"
             , paddingScaled windowSize.width 5
             , Background.color introBackgroundColour
+            , htmlAttribute <| id "intro-full-viewport"
             ]
             [ el [ height << px <| headerHeight windowSize.width ] Element.none
             , el
@@ -568,6 +586,9 @@ viewIntro windowSize title =
                         [ text <|
                             "We would like you to join us "
                                 ++ "in celebrating our marriage"
+                                ++ (String.fromInt <|
+                                        heightToInt windowSize.height
+                                   )
                         ]
                     ]
 

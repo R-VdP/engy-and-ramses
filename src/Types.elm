@@ -4,6 +4,7 @@ module Types exposing
     , WindowSize
     , handleResult
     , heightToInt
+    , mkWindowSize
     , widthToInt
     )
 
@@ -28,6 +29,11 @@ heightToInt (MkHeight w) =
 
 type alias WindowSize =
     { width : Width, height : Height }
+
+
+mkWindowSize : Width -> Height -> WindowSize
+mkWindowSize width height =
+    { width = width, height = height }
 
 
 handleResult : (err -> a) -> (val -> a) -> Result err val -> a
