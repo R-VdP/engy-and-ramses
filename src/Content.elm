@@ -110,14 +110,26 @@ when crossing the street.
 Cairo has everything to offer when it comes to food, and quality and hygiene
 standards are very good.
 When staying in Maadi, we can recommend the following restaurants:
-1. [Lokali](https://goo.gl/maps/6GxZSeZTnYnXJDzLA) has a great garden and very
-   nice fresh food
-1. [Ovio](https://goo.gl/maps/zc5cu8QqxQ7mwfvWA) is great for breakfast or
-   lunch
-1. [Zooba](https://goo.gl/maps/tNtdtaLuN5TrfirH6) has great taameyya, the
-   Egyptian version of falafel, and other kinds of "street food".
-   This street offers many more options and is one of the main streets in
-   Maadi for food and drinks
+1. [Lokali][lokali] has a great garden and very nice fresh food.
+1. [Ovio][ovio] is great for breakfast or lunch.
+1. [Zooba][zooba] has great taameyya, the Egyptian version of falafel, and
+   other kinds of "street food".
+   The street where Zooba is located, Road 9, offers many more options and is
+   one of the main streets in Maadi for food and drinks.
+1. [The Platform][platform] is a very nice open-air area overlooking the Nile.
+   There are several restaurants located here that are worth checking out.
+   Highly recommended for a sunset dinner.
+1. [KMT House][kmt_house] a restaurant located in a beautiful old villa in Maadi.
+   You can sit outside in their garden for drinks or foods.
+1. [Tawlet Yvonne][tawlet] In the same atmosphere as the KMT House, a nice
+   and calm garden with very good oriental food.
+
+[lokali]: https://goo.gl/maps/6GxZSeZTnYnXJDzLA
+[ovio]: https://goo.gl/maps/zc5cu8QqxQ7mwfvWA
+[zooba]: https://goo.gl/maps/tNtdtaLuN5TrfirH6
+[platform]: https://goo.gl/maps/CGkjJWM1Ywfcv6Wc6
+[kmt_house]: https://goo.gl/maps/yL74KXq4KDxWD5QS9
+[tawlet]: https://goo.gl/maps/t1zT7Jg9AHppCMF28
 
 We can recommend a lot more places, also in other areas, so do not hesitate
 to ask!
