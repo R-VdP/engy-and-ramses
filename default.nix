@@ -19,7 +19,7 @@ let
     stdenv.mkDerivation {
       inherit pname version src;
 
-      buildInputs = [ elmPackages.elm nodePackages.uglify-js ];
+      buildInputs = [ elmPackages.elm nodePackages.uglify-js minify ];
 
       preBuildPhases = [ "setupElmStuffPhase" ];
 
@@ -51,10 +51,17 @@ let
 
       installPhase = ''
         mkdir --parents $out
-        echo "copying generated code"
+        echo "copying generated code..."
         cp --verbose --recursive ${dist}/generated $out
-        echo "copying assets"
-        cp --verbose --recursive index.html assets $out
+        echo "copying assets..."
+        cp --verbose --recursive assets $out
+        echo "minifying index.html..."
+        minify \
+          --html-keep-document-tags \
+          --html-keep-end-tags \
+          --html-keep-quotes \
+          --output $out/index.html \
+          index.html
       '';
     };
 in mkDerivation {
