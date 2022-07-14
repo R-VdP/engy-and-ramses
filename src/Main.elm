@@ -666,17 +666,16 @@ viewEvents windowWidth title =
                 [ viewEvent officiationEvent
                 , viewEvent partyEvent
                 ]
-            , el [ width fill, paddingScaled windowWidth 11 ] <|
-                textColumn
-                    [ width <| maximum maxContentTextWidth fill
-                    , centerX
-                    , Font.justify
+            , textColumn
+                [ width <| maximum maxContentTextWidth fill
+                , centerX
+                , Font.justify
+                ]
+                [ paragraph []
+                    [ text "More info on how to get to the events will "
+                    , text "follow closer to the date."
                     ]
-                    [ paragraph []
-                        [ text "More info on how to get to the events will "
-                        , text "follow closer to the date."
-                        ]
-                    ]
+                ]
             ]
 
 
