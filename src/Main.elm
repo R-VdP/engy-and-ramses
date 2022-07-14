@@ -24,6 +24,7 @@ import Content
         , spacingScaled
         , subtitleColour
         , textColour
+        , textSpacing
         , titleColour
         , titleFont
         )
@@ -43,7 +44,6 @@ import Element
         , fill
         , fillPortion
         , height
-        , html
         , htmlAttribute
         , image
         , inFront
@@ -72,7 +72,7 @@ import Element.Input as Input
 import Element.Lazy exposing (lazy, lazy2, lazy3)
 import Html exposing (Html)
 import Html.Attributes exposing (id, style)
-import Json.Decode as JDecode exposing (Error)
+import Json.Decode as JDecode
 import Markdown.Block as MdBlock
 import Markdown.Parser
 import MdRendering exposing (rawTextToId)
@@ -82,7 +82,6 @@ import Types
         ( Height(..)
         , Width(..)
         , WindowSize
-        , heightToInt
         , mkWindowSize
         , widthToInt
         )
@@ -276,15 +275,11 @@ mkMarkdownPage windowWidth parsed title =
 mkStdTxtPage : Width -> String -> List (Element Msg) -> Element Msg
 mkStdTxtPage windowWidth title =
     mkPage windowWidth title
-        << el
-            [ width fill
-            , paddingScaled windowWidth 11
-            ]
         << textColumn
             [ width <| maximum maxContentTextWidth fill
             , centerX
             , Font.justify
-            , spacingScaled windowWidth 13
+            , spacingScaled windowWidth textSpacing
             ]
 
 
@@ -294,10 +289,14 @@ mkPage windowWidth title content =
         [ titleToIdAttr title
         , width fill
         , paddingScaled windowWidth 11
-        , spacingScaled windowWidth 13
+        , spacingScaled windowWidth textSpacing
         ]
         [ viewPageTitle windowWidth title
-        , content
+        , el
+            [ width fill
+            , paddingScaled windowWidth 8
+            ]
+            content
         ]
 
 
@@ -404,7 +403,7 @@ viewPoem windowWidth =
         , fontSizeScaled windowWidth 3
         , Font.family [ arabicFont ]
         , Font.color subtitleColour
-        , spacingScaled windowWidth 13
+        , spacingScaled windowWidth textSpacing
         ]
     <|
         List.map lineToParagraph poemLines
@@ -441,7 +440,7 @@ viewIntro windowSize title =
                 && screenSizeLimits
                     windowSize.width
                     windowSize.height
-                    [ ( 0, 660 ), ( 550, 630 ) ]
+                    [ ( 295, 660 ), ( 550, 630 ) ]
 
         desertPhoto : Int -> Element Msg
         desertPhoto size =

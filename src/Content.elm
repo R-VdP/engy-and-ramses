@@ -21,6 +21,7 @@ module Content exposing
     , spacingScaled
     , subtitleColour
     , textColour
+    , textSpacing
     , titleColour
     , titleFont
     )
@@ -285,6 +286,11 @@ spacingScaled width =
 paddingScaled : Width -> Int -> Attribute msg
 paddingScaled width =
     Element.padding << scaleSpacing width
+
+
+textSpacing : Int
+textSpacing =
+    13
 
 
 pageMenuButtonPadding : Width -> Int

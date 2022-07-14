@@ -5,6 +5,7 @@ import Content
         ( fontSizeScaled
         , introBackgroundColour
         , spacingScaled
+        , textSpacing
         , titleFont
         )
 import Element
@@ -85,10 +86,10 @@ elmUiRenderer windowWidth =
             , Background.color (rgb255 245 245 245)
             ]
     , unorderedList =
-        column [ spacingScaled windowWidth 13 ]
+        column [ spacingScaled windowWidth (textSpacing // 2) ]
             << List.map
                 (\(ListItem task children) ->
-                    row [ spacingScaled windowWidth 13 ]
+                    row [ spacingScaled windowWidth 5 ]
                         [ el
                             [ alignTop
                             , width shrink
@@ -108,10 +109,10 @@ elmUiRenderer windowWidth =
                 )
     , orderedList =
         \startingIndex ->
-            column [ spacingScaled windowWidth 13 ]
+            column [ spacingScaled windowWidth (textSpacing // 2) ]
                 << List.indexedMap
                     (\index itemBlocks ->
-                        row [ spacing 5 ]
+                        row [ spacingScaled windowWidth 5 ]
                             [ el
                                 [ alignTop
                                 , width shrink
