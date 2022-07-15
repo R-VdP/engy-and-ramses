@@ -471,8 +471,8 @@ viewIntro windowSize title =
                     , description = desc
                     }
 
-        verticalPhotos : Element Msg
-        verticalPhotos =
+        verticalPhotos : () -> Element Msg
+        verticalPhotos _ =
             el
                 [ centerX
                 , centerY
@@ -486,8 +486,8 @@ viewIntro windowSize title =
             <|
                 desertPhoto 200
 
-        smallVerticalPhotos : Element Msg
-        smallVerticalPhotos =
+        smallVerticalPhotos : () -> Element Msg
+        smallVerticalPhotos _ =
             el
                 [ centerX
                 , centerY
@@ -501,8 +501,8 @@ viewIntro windowSize title =
             <|
                 desertPhoto 120
 
-        smallHorizontalPhotos : Element Msg
-        smallHorizontalPhotos =
+        smallHorizontalPhotos : () -> Element Msg
+        smallHorizontalPhotos _ =
             el
                 [ centerX
                 , alignTop
@@ -515,8 +515,8 @@ viewIntro windowSize title =
             <|
                 desertPhoto 150
 
-        horizontalPhotos : Element Msg
-        horizontalPhotos =
+        horizontalPhotos : () -> Element Msg
+        horizontalPhotos _ =
             el
                 [ centerX
                 , alignTop
@@ -558,10 +558,10 @@ viewIntro windowSize title =
                 , height <| fillPortion 2
                 , behindContent <|
                     if showLargeVerticalPhotos then
-                        verticalPhotos
+                        verticalPhotos ()
 
                     else if showSmallVerticalPhotos then
-                        smallVerticalPhotos
+                        smallVerticalPhotos ()
 
                     else
                         Element.none
@@ -609,7 +609,8 @@ viewIntro windowSize title =
                     , height <| fillPortion 1
                     , paddingScaled windowSize.width 8
                     ]
-                    horizontalPhotos
+                <|
+                    horizontalPhotos ()
 
               else if showSmallHorizontalPhotos then
                 el
@@ -617,7 +618,8 @@ viewIntro windowSize title =
                     , height <| fillPortion 1
                     , paddingScaled windowSize.width 8
                     ]
-                    smallHorizontalPhotos
+                <|
+                    smallHorizontalPhotos ()
 
               else
                 Element.none
