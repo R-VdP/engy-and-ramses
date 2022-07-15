@@ -55,13 +55,18 @@ let
         cp --verbose --recursive ${dist}/generated $out
         echo "copying assets..."
         cp --verbose --recursive assets $out
-        echo "minifying index.html..."
-        minify \
-          --html-keep-document-tags \
-          --html-keep-end-tags \
-          --html-keep-quotes \
-          --output $out/index.html \
-          index.html
+        ${if production
+          then ''
+            echo "minifying index.html..."
+            minify \
+              --html-keep-document-tags \
+              --html-keep-end-tags \
+              --html-keep-quotes \
+              --output $out/index.html \
+              index.html''
+          else
+            "cp --verbose index.html $out"
+        }
       '';
     };
 in mkDerivation {
