@@ -8,16 +8,17 @@ import Content
         , arabicFont
         , blackTransparent
         , darkYellow
+        , fontSizeH1
         , fontSizeScaled
         , introBackgroundColour
         , introFont
         , mainFont
         , mainTitleColour
         , maxContentTextWidth
-        , maxContentWidth
         , minWindowWidth
         , paddingScaled
         , pageMenuButtonPadding
+        , pagePadding
         , poemLines
         , scaleFontSize
         , scaleSpacing
@@ -55,10 +56,11 @@ import Element
         , moveUp
         , newTabLink
         , padding
-        , paddingXY
+        , paddingEach
         , paragraph
         , px
         , rotate
+        , row
         , shrink
         , text
         , textColumn
@@ -279,7 +281,7 @@ mkStdTxtPage windowWidth title =
             [ width <| maximum maxContentTextWidth fill
             , centerX
             , Font.justify
-            , spacingScaled windowWidth textSpacing
+            , textSpacing windowWidth
             ]
 
 
@@ -288,8 +290,8 @@ mkPage windowWidth title content =
     column
         [ titleToIdAttr title
         , width fill
-        , paddingScaled windowWidth 11
-        , spacingScaled windowWidth textSpacing
+        , padding <| pagePadding windowWidth
+        , textSpacing windowWidth
         ]
         [ viewPageTitle windowWidth title
         , el
@@ -380,7 +382,7 @@ viewElement : Model -> Element Msg
 viewElement model =
     column
         [ width fill
-        , spacingScaled model.windowSize.width 14
+        , textSpacing model.windowSize.width
         , Background.color almostWhite
         , Font.color textColour
         ]
@@ -403,7 +405,7 @@ viewPoem windowWidth =
         , fontSizeScaled windowWidth 3
         , Font.family [ arabicFont ]
         , Font.color subtitleColour
-        , spacingScaled windowWidth textSpacing
+        , textSpacing windowWidth
         ]
     <|
         List.map lineToParagraph poemLines
@@ -531,7 +533,16 @@ viewIntro windowSize title =
         introBaseHeight =
             ceiling <| toFloat (widthToInt windowSize.width) * tan (pi / 32) / 2
     in
-    column [ titleToIdAttr title, width fill ]
+    column
+        [ titleToIdAttr title
+        , width fill
+        , paddingEach
+            { top = 0
+            , left = 0
+            , right = 0
+            , bottom = pagePadding windowSize.width
+            }
+        ]
         [ column
             [ width fill
             , htmlAttribute <| HA.style "height" "100vh"
@@ -651,18 +662,23 @@ viewEvents windowWidth title =
         viewEvent =
             el
                 [ width fill
-                , paddingXY (scaleSpacing windowWidth 11)
-                    (scaleSpacing windowWidth 8)
+
+                -- TODO can we replace this by spacing on the row containing these?
+                --, paddingXY (scaleSpacing windowWidth 11)
+                --    (scaleSpacing windowWidth 8)
                 ]
                 << viewEventSummary windowWidth
     in
     mkPage windowWidth title <|
         column
-            [ width <| maximum maxContentWidth fill
+            [ width <| maximum maxContentTextWidth fill
             , centerX
-            , spacingScaled windowWidth 13
+            , textSpacing windowWidth
             ]
-            [ wrappedRow [ width fill ]
+            [ wrappedRow
+                [ width fill
+                , spacingScaled windowWidth 10
+                ]
                 [ viewEvent officiationEvent
                 , viewEvent partyEvent
                 ]
@@ -688,14 +704,12 @@ viewEventSummary windowWidth event =
         , Border.width <| scaleSpacing windowWidth 0
         , Border.solid
         , Border.rounded 3
-        , spacingScaled windowWidth 11
-
-        -- TODO can we replace this by spacing on the row containing these?
+        , textSpacing windowWidth
         , paddingScaled windowWidth 5
         , centerX
         ]
         [ el
-            [ fontSizeScaled windowWidth 4
+            [ fontSizeH1 windowWidth
             , Font.bold
             , Font.color introBackgroundColour
             , Font.family [ titleFont ]

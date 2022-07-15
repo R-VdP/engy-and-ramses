@@ -5,16 +5,20 @@ module Content exposing
     , arabicFont
     , blackTransparent
     , darkYellow
+    , defaultTextSpacing
+    , fontSizeH1
+    , fontSizeH2
+    , fontSizeH3
     , fontSizeScaled
     , introBackgroundColour
     , introFont
     , mainFont
     , mainTitleColour
     , maxContentTextWidth
-    , maxContentWidth
     , minWindowWidth
     , paddingScaled
     , pageMenuButtonPadding
+    , pagePadding
     , poemLines
     , scaleFontSize
     , scaleSpacing
@@ -22,6 +26,7 @@ module Content exposing
     , subtitleColour
     , textColour
     , textSpacing
+    , textSpacingScaled
     , titleColour
     , titleFont
     )
@@ -268,12 +273,27 @@ fontSizeScaled width =
     Font.size << scaleFontSize width
 
 
+fontSizeH1 : Width -> Attribute msg
+fontSizeH1 width =
+    fontSizeScaled width 4
+
+
+fontSizeH2 : Width -> Attribute msg
+fontSizeH2 width =
+    fontSizeScaled width 2
+
+
+fontSizeH3 : Width -> Attribute msg
+fontSizeH3 width =
+    fontSizeScaled width 1
+
+
 scaleSpacing : Width -> Int -> Int
 scaleSpacing width =
     let
         base : Float
         base =
-            scalingBase width ( 5, 3, 1 )
+            scalingBase width ( 5, 3, 2 )
     in
     round << Element.modular base 1.15
 
@@ -288,9 +308,19 @@ paddingScaled width =
     Element.padding << scaleSpacing width
 
 
-textSpacing : Int
-textSpacing =
-    13
+defaultTextSpacing : Int
+defaultTextSpacing =
+    10
+
+
+textSpacing : Width -> Attribute msg
+textSpacing width =
+    textSpacingScaled width defaultTextSpacing
+
+
+textSpacingScaled : Width -> Int -> Attribute msg
+textSpacingScaled width =
+    Element.spacing << scaleSpacing width
 
 
 pageMenuButtonPadding : Width -> Int
@@ -298,14 +328,14 @@ pageMenuButtonPadding width =
     scaleSpacing width 0
 
 
+pagePadding : Width -> Int
+pagePadding width =
+    scaleSpacing width 11
+
+
 minWindowWidth : Int
 minWindowWidth =
-    230
-
-
-maxContentWidth : Int
-maxContentWidth =
-    800
+    225
 
 
 maxContentTextWidth : Int

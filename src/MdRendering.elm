@@ -2,10 +2,9 @@ module MdRendering exposing (rawTextToId, viewMarkdown)
 
 import Content
     exposing
-        ( fontSizeScaled
+        ( defaultTextSpacing
         , introBackgroundColour
         , spacingScaled
-        , textSpacing
         , titleFont
         )
 import Element
@@ -24,7 +23,6 @@ import Element
         , rgb255
         , row
         , shrink
-        , spacing
         , text
         , width
         )
@@ -86,7 +84,7 @@ elmUiRenderer windowWidth =
             , Background.color (rgb255 245 245 245)
             ]
     , unorderedList =
-        column [ spacingScaled windowWidth (textSpacing // 2) ]
+        column [ spacingScaled windowWidth (defaultTextSpacing // 2) ]
             << List.map
                 (\(ListItem task children) ->
                     row [ spacingScaled windowWidth 5 ]
@@ -109,7 +107,7 @@ elmUiRenderer windowWidth =
                 )
     , orderedList =
         \startingIndex ->
-            column [ spacingScaled windowWidth (textSpacing // 2) ]
+            column [ spacingScaled windowWidth (defaultTextSpacing // 2) ]
                 << List.indexedMap
                     (\index itemBlocks ->
                         row [ spacingScaled windowWidth 5 ]
@@ -147,13 +145,13 @@ heading windowWidth { level, rawText, children } =
     paragraph
         [ case level of
             Block.H1 ->
-                fontSizeScaled windowWidth 4
+                Content.fontSizeH1 windowWidth
 
             Block.H2 ->
-                fontSizeScaled windowWidth 2
+                Content.fontSizeH2 windowWidth
 
             _ ->
-                fontSizeScaled windowWidth 1
+                Content.fontSizeH3 windowWidth
         , Font.bold
         , Font.color introBackgroundColour
         , Font.family [ titleFont ]
