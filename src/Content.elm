@@ -59,8 +59,8 @@ If you wish to stay in a hotel, we can recommend the following hotels:
 Alternatively, you can also rent a room or apartment on AirBnB.
 There are many good options in Cairo, but if you do not know the city,
 you can best confirm the location with us before booking.
-We also created
-[a list with good options][airbnb] on AirBnB,
+We also created a
+[list with good options][airbnb] on AirBnB,
 but make sure to check that the places corresponds to your preferences as well.
 
 [holiday_inn]: https://goo.gl/maps/RVxAZFCCAXZoAxon9
