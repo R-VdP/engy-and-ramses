@@ -71,7 +71,7 @@ import Element.Font as Font
 import Element.Input as Input
 import Element.Lazy exposing (lazy, lazy2, lazy3)
 import Html exposing (Html)
-import Html.Attributes exposing (id, style)
+import Html.Attributes as HA
 import Json.Decode as JDecode
 import Markdown.Block as MdBlock
 import Markdown.Parser
@@ -167,7 +167,7 @@ titleToId =
 
 titleToIdAttr : String -> Attribute Msg
 titleToIdAttr =
-    htmlAttribute << id << titleToId
+    htmlAttribute << HA.id << titleToId
 
 
 type Msg
@@ -534,11 +534,11 @@ viewIntro windowSize title =
     column [ titleToIdAttr title, width fill ]
         [ column
             [ width fill
-            , htmlAttribute <| style "height" "100vh"
-            , htmlAttribute <| style "min-height" "100vh"
+            , htmlAttribute <| HA.style "height" "100vh"
+            , htmlAttribute <| HA.style "min-height" "100vh"
             , paddingScaled windowSize.width 5
             , Background.color introBackgroundColour
-            , htmlAttribute <| id "intro-full-viewport"
+            , htmlAttribute <| HA.id "intro-full-viewport"
             ]
             [ el [ height << px <| headerHeight windowSize.width ] Element.none
             , el
@@ -615,7 +615,7 @@ viewIntro windowSize title =
             [ width fill
             , height <| px introBaseHeight
             , Background.color introBackgroundColour
-            , htmlAttribute <| style "clip-path" "polygon(0 0, 50% 100%, 100% 0)"
+            , htmlAttribute <| HA.style "clip-path" "polygon(0 0, 50% 100%, 100% 0)"
             ]
             Element.none
         ]
@@ -713,14 +713,23 @@ viewEventSummary windowWidth event =
             ]
             { url = event.mapsUrl
             , label =
-                el
+                row
                     [ centerX
+                    , spacingScaled windowWidth 1
                     , paddingScaled windowWidth 6
                     , Background.color darkYellow
                     , Font.color textColour
                     , Font.regular
                     ]
-                <|
-                    text "Open in maps"
+                    [ el
+                        [ htmlAttribute <| HA.class "material-icons"
+                        , fontSizeScaled windowWidth 0
+                        , Font.family [ Font.typeface "Material Icons Outlined" ]
+                        , alignTop
+                        ]
+                      <|
+                        text "place"
+                    , el [ alignBottom ] <| text "Open in maps"
+                    ]
             }
         ]
