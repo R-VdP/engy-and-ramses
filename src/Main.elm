@@ -119,7 +119,7 @@ pages : List Page
 pages =
     [ { title = "Home"
       , shortTitle = Nothing
-      , view = \model -> lazy2 viewIntro model.windowSize
+      , view = \model -> lazy2 viewIntro model
       }
     , { title = "Events"
       , shortTitle = Nothing
@@ -178,12 +178,9 @@ type Msg
     | NoOp
 
 
-
--- TODO no need for Model to be a record anymore
-
-
 type alias Model =
-    { windowSize : WindowSize
+    { introFullVpId : String
+    , windowSize : WindowSize
     }
 
 
@@ -196,38 +193,54 @@ type alias Event =
     }
 
 
-{-| TODO: receive the intro-full-viewport ID from JS
-so that it's only defined in one spot
--}
+type alias Flags =
+    Model
+
+
 init : JDecode.Value -> ( Model, Cmd Msg )
-init windowSizeValue =
+init value =
     let
-        defaultWindowSize : WindowSize
-        defaultWindowSize =
-            mkWindowSize (MkWidth 0) (MkHeight 0)
+        defaultFlags : Flags
+        defaultFlags =
+            { introFullVpId = ""
+            , windowSize = mkWindowSize (MkWidth 0) (MkHeight 0)
+            }
+
+        mkFlags : String -> WindowSize -> Flags
+        mkFlags id size =
+            { introFullVpId = id, windowSize = size }
     in
-    ( { windowSize =
-            decodeWindowSize defaultWindowSize mkWindowSize windowSizeValue
-      }
+    ( decodeWithDefault defaultFlags (flagsDecoder mkWindowSize mkFlags) value
     , Cmd.none
     )
 
 
-decodeWindowSize : a -> (Width -> Height -> a) -> JDecode.Value -> a
-decodeWindowSize def cont =
+decodeWithDefault : a -> JDecode.Decoder a -> JDecode.Value -> a
+decodeWithDefault def decoder =
+    Result.withDefault def
+        << JDecode.decodeValue decoder
+
+
+flagsDecoder :
+    (Width -> Height -> windowSize)
+    -> (String -> windowSize -> flags)
+    -> JDecode.Decoder flags
+flagsDecoder windowSizeCont flagsCont =
+    JDecode.map2 flagsCont
+        (JDecode.field "introFullVpId" JDecode.string)
+        (JDecode.field "windowSize" <| windowSizeDecoder windowSizeCont)
+
+
+windowSizeDecoder : (Width -> Height -> windowSize) -> JDecode.Decoder windowSize
+windowSizeDecoder cont =
     let
         intFieldDecoder : String -> JDecode.Decoder Int
         intFieldDecoder fieldName =
             JDecode.field fieldName JDecode.int
-
-        windowSizeDecoder : JDecode.Decoder a
-        windowSizeDecoder =
-            JDecode.map2 cont
-                (JDecode.map MkWidth <| intFieldDecoder "width")
-                (JDecode.map MkHeight <| intFieldDecoder "height")
     in
-    Result.withDefault def
-        << JDecode.decodeValue windowSizeDecoder
+    JDecode.map2 cont
+        (JDecode.map MkWidth <| intFieldDecoder "width")
+        (JDecode.map MkHeight <| intFieldDecoder "height")
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -248,8 +261,8 @@ update msg model =
 subscriptions : Model -> Sub Msg
 subscriptions _ =
     receiveWindowSize <|
-        decodeWindowSize NoOp
-            (\w h -> WindowResized <| mkWindowSize w h)
+        decodeWithDefault NoOp <|
+            windowSizeDecoder (\w h -> WindowResized <| mkWindowSize w h)
 
 
 headerHeight : Width -> Int
@@ -411,9 +424,13 @@ viewPoem windowWidth =
         List.map lineToParagraph poemLines
 
 
-viewIntro : WindowSize -> String -> Element Msg
-viewIntro windowSize title =
+viewIntro : Model -> String -> Element Msg
+viewIntro model title =
     let
+        windowSize : WindowSize
+        windowSize =
+            model.windowSize
+
         showLargeVerticalPhotos : Bool
         showLargeVerticalPhotos =
             screenSizeLimits windowSize.width
@@ -549,7 +566,7 @@ viewIntro windowSize title =
             , htmlAttribute <| HA.style "min-height" "100vh"
             , paddingScaled windowSize.width 5
             , Background.color introBackgroundColour
-            , htmlAttribute <| HA.id "intro-full-viewport"
+            , htmlAttribute <| HA.id model.introFullVpId
             ]
             [ el [ height << px <| headerHeight windowSize.width ] Element.none
             , el

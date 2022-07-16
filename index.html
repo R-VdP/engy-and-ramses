@@ -20,6 +20,7 @@
     const loadMain = document.createElement("script")
     document.head.appendChild(loadMain)
     loadMain.onload = () => {
+      // The id of the element used to determine the viewport height
       const introElementId = "intro-full-viewport"
 
       function getInnerDimensions() {
@@ -34,12 +35,31 @@
         app.ports.receiveWindowSize.send(getInnerDimensions())
       }
 
-      const app = Elm.Main.init({ flags: getInnerDimensions() })
+      // We want to add a ResizeObserver once the element with
+      // id intro-full-viewport gets created.
+      // We will this observe DOM changes until we find this element.
+      new MutationObserver((_mutationList, observer) => {
+        const introElem = document.getElementById(introElementId)
+        if (introElem) {
+          // We found the element, further events do not need to be handled,
+          // so we can disconnect this observer.
+          observer.disconnect()
 
-      // Can this cause issues if the observed element does not exist yet?
-      new ResizeObserver(entries => {
-        sendInnerDimensions()
-      }).observe(document.getElementById(introElementId))
+          // Every time the viewport size changes, we inform the Elm app about this.
+          new ResizeObserver(_entries => {
+            sendInnerDimensions()
+          }).observe(introElem)
+        }
+      }).observe(document.body,
+                 { attributes: false, childList: true, subtree: true })
+
+      // The MutationObserver is in place, we can launch our Elm app.
+      const app = Elm.Main.init({
+        flags: {
+          introFullVpId: introElementId,
+          windowSize: getInnerDimensions()
+        }
+      })
     }
     // Add a random query string to avoid caching
     loadMain.src = "generated/Main.js?r=" + Math.floor(Math.random() * 100000)
