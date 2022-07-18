@@ -463,11 +463,11 @@ viewIntro model title =
 
         desertPhoto : Int -> Element Msg
         desertPhoto size =
-            mkPhoto size "assets/cropped_desert.jpg" "in the dessert" (pi / 24)
+            mkPhoto size "assets/cropped_desert.webp" "in the dessert" (pi / 24)
 
         berlinPhoto : Int -> Element Msg
         berlinPhoto size =
-            mkPhoto size "assets/berlin.jpg" "in berlin" (-pi / 32)
+            mkPhoto size "assets/berlin.webp" "in berlin" (-pi / 32)
 
         mkPhoto : Int -> String -> String -> Float -> Element Msg
         mkPhoto size src desc angle =
