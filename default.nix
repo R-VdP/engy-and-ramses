@@ -56,6 +56,7 @@ let
                 <(uglifyjs ${elm_target} --compress '${compress_options}') \
                 <(uglifyjs ${init_script} --compress) \
                 --mangle \
+                --toplevel \
                 --output ${out_file}''
             else ''
               uglifyjs ${elm_target} ${init_script} --warn --beautify --output ${out_file}
