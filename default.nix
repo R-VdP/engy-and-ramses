@@ -37,7 +37,7 @@ let
           init_script = "${src}/js/app.js";
           out_dir = "${out}/generated";
           out_file = "${out_dir}/app.js";
-          compress_options =
+          elm_compress_options =
             concatStringsSep "," [
               ''pure_funcs="F2,F3,F4,F5,F6,F7,F8,F9,A2,A3,A4,A5,A6,A7,A8,A9"''
               ''pure_getters''
@@ -53,7 +53,7 @@ let
           ${if production
             then ''
               uglifyjs \
-                <(uglifyjs ${elm_target} --compress '${compress_options}') \
+                <(uglifyjs ${elm_target} --compress '${eln_compress_options}') \
                 <(uglifyjs ${init_script} --compress) \
                 --mangle \
                 --toplevel \
