@@ -53,7 +53,7 @@ let
           ${if production
             then ''
               uglifyjs \
-                <(uglifyjs ${elm_target} --compress '${eln_compress_options}') \
+                <(uglifyjs ${elm_target} --compress '${elm_compress_options}') \
                 <(uglifyjs ${init_script} --compress) \
                 --mangle \
                 --toplevel \
