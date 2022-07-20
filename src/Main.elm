@@ -209,10 +209,12 @@ init value =
         mkFlags : String -> WindowSize -> Flags
         mkFlags id size =
             { introFullVpId = id, windowSize = size }
+
+        decodeFlags : JDecode.Value -> Flags
+        decodeFlags =
+            decodeWithDefault defaultFlags (flagsDecoder mkWindowSize mkFlags)
     in
-    ( decodeWithDefault defaultFlags (flagsDecoder mkWindowSize mkFlags) value
-    , Cmd.none
-    )
+    ( decodeFlags value, Cmd.none )
 
 
 decodeWithDefault : a -> JDecode.Decoder a -> JDecode.Value -> a
@@ -272,10 +274,16 @@ headerHeight width =
 
 jumpToPage : Width -> Page -> Cmd Msg
 jumpToPage windowWidth =
+    let
+        headerHeightFloat =
+            toFloat <| headerHeight windowWidth
+    in
     Task.attempt (always NoOp)
         << Task.andThen
             (\info ->
-                Dom.setViewport info.element.x (info.element.y - toFloat (headerHeight windowWidth))
+                Dom.setViewport
+                    info.element.x
+                    (info.element.y - headerHeightFloat)
             )
         << Dom.getElement
         << titleToId
@@ -284,7 +292,8 @@ jumpToPage windowWidth =
 
 mkMarkdownPage : Width -> ParsedMarkdown -> String -> Element Msg
 mkMarkdownPage windowWidth parsed title =
-    mkStdTxtPage windowWidth title <| MdRendering.viewMarkdown windowWidth parsed
+    mkStdTxtPage windowWidth title <|
+        MdRendering.viewMarkdown windowWidth parsed
 
 
 mkStdTxtPage : Width -> String -> List (Element Msg) -> Element Msg
@@ -337,19 +346,15 @@ view model =
             , backgroundColor = Nothing
             , shadow = Nothing
             }
-
-        windowWidth : Length
-        windowWidth =
-            minimum minWindowWidth fill
     in
     Element.layoutWith { options = [ Element.focusStyle focusStyle ] }
-        [ width windowWidth
+        [ width <| minimum minWindowWidth fill
         , fontSizeScaled model.windowSize.width -1
         , Font.family
             [ mainFont
             , Font.serif
             ]
-        , inFront << el [ width windowWidth ] <| lazy menu model.windowSize.width
+        , inFront <| lazy menu model.windowSize.width
         ]
         (lazy viewElement model)
 
@@ -358,7 +363,9 @@ menu : Width -> Element Msg
 menu windowWidth =
     el
         [ width fill
+        , height shrink
         , Background.color blackTransparent
+        , htmlAttribute <| HA.id "main-menu"
         ]
     <|
         wrappedRow
