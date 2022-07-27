@@ -33,7 +33,6 @@ import Element
     exposing
         ( Attribute
         , Element
-        , Length
         , alignBottom
         , alignRight
         , alignTop
@@ -348,13 +347,13 @@ view model =
             }
     in
     Element.layoutWith { options = [ Element.focusStyle focusStyle ] }
-        [ width <| minimum minWindowWidth fill
+        [ htmlAttribute <| HA.id "main-element"
+        , width <| minimum minWindowWidth fill
         , fontSizeScaled model.windowSize.width -1
         , Font.family
             [ mainFont
             , Font.serif
             ]
-        , inFront <| lazy menu model.windowSize.width
         ]
         (lazy viewElement model)
 
@@ -362,14 +361,22 @@ view model =
 menu : Width -> Element Msg
 menu windowWidth =
     el
-        [ width fill
+        [ htmlAttribute <| HA.id "main-menu"
+        , width fill
         , height shrink
         , Background.color blackTransparent
-        , htmlAttribute <| HA.id "main-menu"
+
+        -- TODO: is there a way to get sticky positioning in elm-ui so that
+        --       the menu always sticks to the top of the viewport but
+        --       scrolls horizontally with the surrounding container when the
+        --       viewport width is less than minWindowWidth ?
+        , htmlAttribute <| HA.style "position" "sticky"
+        , htmlAttribute <| HA.style "top" "0"
         ]
     <|
-        wrappedRow
-            [ centerX
+        row
+            [ htmlAttribute <| HA.id "main-menu-button-container"
+            , centerX
             , alignTop
             , Font.size <| menuFontSize windowWidth
             , Font.color almostWhite
@@ -383,28 +390,31 @@ menuFontSize width =
 
 
 pageMenuButton : Width -> Page -> Element Msg
-pageMenuButton width page =
+pageMenuButton windowWidth page =
     Input.button
-        [ Border.width 0
+        [ htmlAttribute << HA.id <| "main-menu-button-" ++ pageShortTitle page
+        , Border.width 0
         , Font.bold
+        , width fill
         ]
         { onPress = Just (GoToPage page)
         , label =
-            el [ padding <| pageMenuButtonPadding width ]
+            el [ padding <| pageMenuButtonPadding windowWidth, centerX ]
                 << text
-                << pageShortTitle
             <|
-                page
+                pageShortTitle page
         }
 
 
 viewElement : Model -> Element Msg
 viewElement model =
     column
-        [ width fill
+        [ htmlAttribute <| HA.id "page-container"
+        , width fill
         , textSpacing model.windowSize.width
         , Background.color almostWhite
         , Font.color textColour
+        , inFront <| lazy menu model.windowSize.width
         ]
         (List.map (\p -> p.view model p.title) pages)
 
@@ -421,7 +431,8 @@ viewPoem windowWidth =
             paragraph [ Font.center ] << List.singleton << text << lineToStr
     in
     textColumn
-        [ width fill
+        [ htmlAttribute <| HA.id "poem"
+        , width fill
         , fontSizeScaled windowWidth 3
         , Font.family [ arabicFont ]
         , Font.color subtitleColour
@@ -686,13 +697,7 @@ viewEvents windowWidth title =
 
         viewEvent : Event -> Element Msg
         viewEvent =
-            el
-                [ width fill
-
-                -- TODO can we replace this by spacing on the row containing these?
-                --, paddingXY (scaleSpacing windowWidth 11)
-                --    (scaleSpacing windowWidth 8)
-                ]
+            el [ width fill ]
                 << viewEventSummary windowWidth
     in
     mkPage windowWidth title <|

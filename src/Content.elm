@@ -329,7 +329,7 @@ textSpacingScaled width =
 
 pageMenuButtonPadding : Width -> Int
 pageMenuButtonPadding width =
-    scaleSpacing width 0
+    scaleSpacing width 1
 
 
 pagePadding : Width -> Int
