@@ -30,6 +30,7 @@ jobs:
         run: >-
           nix-build
           --arg production true
+          --argstr version "${{ github.sha }}"
           --out-link generated-site
           frontend
 
