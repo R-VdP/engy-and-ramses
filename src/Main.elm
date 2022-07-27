@@ -24,6 +24,7 @@ import Content
         , pageTitlefontSize
         , poemLines
         , scaleSpacing
+        , shadowGrey
         , spacingScaled
         , subtitleColour
         , textColour
@@ -767,6 +768,13 @@ viewEventSummary windowWidth event =
                     [ centerX
                     , spacingScaled windowWidth 1
                     , paddingScaled windowWidth 6
+                    , Border.rounded 3
+                    , Border.shadow
+                        { offset = ( 1, 1 )
+                        , size = 1
+                        , blur = 0
+                        , color = shadowGrey
+                        }
                     , Background.color darkYellow
                     , Font.color textColour
                     , Font.regular
@@ -779,7 +787,7 @@ viewEventSummary windowWidth event =
                         ]
                       <|
                         text "place"
-                    , el [ alignBottom ] <| text "Open in maps"
+                    , el [ alignBottom, Font.bold ] <| text "Open in maps"
                     ]
             }
         ]

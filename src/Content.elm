@@ -26,6 +26,7 @@ module Content exposing
     , poemLines
     , scaleFontSize
     , scaleSpacing
+    , shadowGrey
     , spacingScaled
     , subtitleColour
     , textColour
@@ -374,6 +375,11 @@ maxContentTextWidth =
 almostBlack : Color
 almostBlack =
     rgb255 68 68 68
+
+
+shadowGrey : Color
+shadowGrey =
+    rgb255 225 225 225
 
 
 blackTransparent : Color
