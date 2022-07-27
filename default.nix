@@ -8,6 +8,8 @@ with lib;
 
 let
   dist = "dist";
+  js_dir = "js";
+  minifiedFileName = "minified.js";
   mkDerivation =
     { srcs ? ./nix/elm-srcs.nix
     , src
@@ -19,7 +21,7 @@ let
     stdenv.mkDerivation {
       inherit pname version src;
 
-      buildInputs = [ elmPackages.elm nodePackages.uglify-js minify ];
+      buildInputs = [ elmPackages.elm nodePackages.uglify-js minify coreutils ];
 
       preBuildPhases = [ "setupElmStuffPhase" ];
 
@@ -35,8 +37,8 @@ let
             "${srcdir}/${builtins.replaceStrings ["."] ["/"] module}.elm";
           elm_target = "${out}/elm-app.js";
           init_script = "${src}/js/app.js";
-          out_dir = "${out}/generated";
-          out_file = "${out_dir}/app.js";
+          out_dir = "${out}/${js_dir}";
+          out_file = "${out_dir}/${minifiedFileName}";
           # We calculate the cartesian product to get to a list like
           # F2,A2,F3,A3,...
           pure_funcs = concatMapStringsSep ","
@@ -81,11 +83,26 @@ let
       '';
 
       installPhase = ''
-        mkdir --parents $out
-        echo "copying generated code..."
-        cp --verbose --recursive ${dist}/generated $out
+        mkdir --parents ''${out}
+
         echo "copying assets..."
-        cp --verbose --recursive assets $out
+        cp --verbose --recursive assets ''${out}
+
+        echo "copying generated code..."
+        script_hash="$(
+          sha224sum ${dist}/${js_dir}/${minifiedFileName} | cut -d' ' -f1
+        )"
+        script_path="${js_dir}/''${script_hash}.js"
+        mkdir --parents "''${out}/${js_dir}"
+        cp --verbose \
+           "${dist}/${js_dir}/${minifiedFileName}" \
+           "''${out}/''${script_path}"
+
+        echo "substituting the script name in index.html..."
+        sed --in-place \
+            --expression "s:APP_PATH_SUBST:/''${script_path}:g" \
+            index.html
+
         ${if production
           then ''
             echo "minifying index.html..."
@@ -93,10 +110,10 @@ let
               --html-keep-document-tags \
               --html-keep-end-tags \
               --html-keep-quotes \
-              --output $out/ \
+              --output "''${out}/" \
               index.html''
           else
-            "cp --verbose index.html $out"
+            ''cp --verbose index.html "''${out}"''
         }
       '';
     };
