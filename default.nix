@@ -37,17 +37,26 @@ let
           init_script = "${src}/js/app.js";
           out_dir = "${out}/generated";
           out_file = "${out_dir}/app.js";
+          # We calculate the cartesian product to get to a list like
+          # F2,A2,F3,A3,...
+          pure_funcs = concatMapStringsSep ","
+                         ( {type, index}: type + toString index )
+                         ( cartesianProductOfSets
+                             { type = ["A" "F"]; index = range 2 9; } );
           elm_compress_options =
             concatStringsSep "," [
-              ''pure_funcs="F2,F3,F4,F5,F6,F7,F8,F9,A2,A3,A4,A5,A6,A7,A8,A9"''
+              ''pure_funcs="A,F,${pure_funcs}"''
               ''pure_getters''
               ''keep_fargs=false''
               ''unsafe_comps''
-              ''unsafe,passes=2''
+              ''unsafe''
+              ''passes=2''
             ];
         in ''
           echo "compiling ${elmfile module}"
-          elm make ${optionalString production "--optimize"} ${elmfile module} --output ${elm_target}
+          elm make ${optionalString production "--optimize"} \
+                   --output ${elm_target} \
+                   ${elmfile module}
           echo "minifying JS"
           mkdir -p "${out_dir}"
           ${if production
@@ -59,7 +68,10 @@ let
                 --toplevel \
                 --output ${out_file}''
             else ''
-              uglifyjs ${elm_target} ${init_script} --warn --beautify --output ${out_file}
+              uglifyjs ${elm_target} ${init_script} \
+                       --warn \
+                       --beautify \
+                       --output ${out_file}
             ''
           }
         '';
