@@ -8,6 +8,7 @@ import Content
         , arabicFont
         , blackTransparent
         , darkYellow
+        , defaultFontSize
         , fontSizeH1
         , fontSizeScaled
         , introBackgroundColour
@@ -20,6 +21,7 @@ import Content
         , paddingScaled
         , pageMenuButtonPadding
         , pagePadding
+        , pageTitlefontSize
         , poemLines
         , scaleSpacing
         , spacingScaled
@@ -329,7 +331,7 @@ viewPageTitle : Width -> String -> Element Msg
 viewPageTitle windowWidth title =
     paragraph
         [ alignTop
-        , fontSizeScaled windowWidth 7
+        , pageTitlefontSize windowWidth
         , Font.bold
         , Font.center
         , Font.color titleColour
@@ -351,7 +353,7 @@ view model =
     Element.layoutWith { options = [ Element.focusStyle focusStyle ] }
         [ htmlAttribute <| HA.id "main-element"
         , width <| minimum minWindowWidth fill
-        , fontSizeScaled model.windowSize.width -1
+        , defaultFontSize model.windowSize.width
         , Font.family
             [ mainFont
             , Font.serif

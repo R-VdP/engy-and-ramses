@@ -5,6 +5,8 @@ module Content exposing
     , arabicFont
     , blackTransparent
     , darkYellow
+    , defaultFontSize
+    , defaultFontSizeScale
     , defaultTextSpacing
     , fontSizeH1
     , fontSizeH2
@@ -20,6 +22,7 @@ module Content exposing
     , paddingScaled
     , pageMenuButtonPadding
     , pagePadding
+    , pageTitlefontSize
     , poemLines
     , scaleFontSize
     , scaleSpacing
@@ -278,6 +281,11 @@ fontSizeScaled width =
     Font.size << scaleFontSize width
 
 
+pageTitlefontSize : Width -> Attribute msg
+pageTitlefontSize width =
+    fontSizeScaled width 7
+
+
 fontSizeH1 : Width -> Attribute msg
 fontSizeH1 width =
     fontSizeScaled width 4
@@ -291,6 +299,16 @@ fontSizeH2 width =
 fontSizeH3 : Width -> Attribute msg
 fontSizeH3 width =
     fontSizeScaled width 1
+
+
+defaultFontSize : Width -> Attribute msg
+defaultFontSize width =
+    Font.size <| defaultFontSizeScale width
+
+
+defaultFontSizeScale : Width -> Int
+defaultFontSizeScale width =
+    scaleFontSize width -1
 
 
 menuFontSize : Width -> Int
