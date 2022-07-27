@@ -75,17 +75,14 @@ but make sure to check that the places corresponds to your preferences as well.
 """
 
 
-
--- TODO add dress code for evening events
-
-
 aboutEgypt : String
 aboutEgypt =
     """
 # Transportation
 
 Cairo is a very big and densely populated city that’s notorious for its traffic.
-The best way to get around in Cairo is either with Uber or by taking the metro.
+The best way to get around in Cairo is either with Uber or by taking the metro,
+or a combination of both.
 
 For Uber, it is advisable to install the Uber application beforehand and
 to link it with a credit card,
@@ -96,16 +93,16 @@ rush hours when both prices and the time you will spend in the car can go up
 quite a lot.
 
 Alternatively, you can use the Cairo Metro.
-The metro is very cheap and does not get stuck in the busy Cairo traffic.
+The metro is very cheap and does not get stuck in the traffic.
 Be aware that it can also get very busy in rush hour though.
-If your location is not close to a metro station,
+If your destination is not close to a metro station,
 there is still the option to take an Uber for the final part of your journey,
 but to do part of the journey by metro to avoid traffic.
 
 Walking is also an option, if you do not need to go far, and there are many
 nice areas to stroll around.
-Be mindful of the traffic though when walking in busy streets and
-when crossing the street.
+Be mindful of the traffic though when walking in busy streets or when
+crossing the street, pedestrians do not generally have right of way.
 
 [Here's a little teaser][cairo_traffic] in case you are curious.
 
@@ -159,10 +156,15 @@ modestly.
 When walking on the street, it's best to avoid short skirts (above the knee),
 and to avoid showing shoulders or cleavage.
 
+For the events, the dress code is between dressy casual and cocktail attire.
+Keep in mind that both events will be held in outside venues, so make sure
+that your shoes are appropriate to walk on grass, and bring some extra clothing
+for the evening in case it gets a bit colder.
+
 # Visas
 
 Most non-Egyptians will require a visa to enter Egypt.
-information on Egypt's visa policy can be found on
+Information on Egypt's visa policy can be found on
 [this Wikipedia page][egypt_visa_policy].
 However, it is best to cross-check this information either with
 the travel advisories provided by the foreign affairs ministry of your country
@@ -176,19 +178,23 @@ If you have a passport that makes you eligible for a visa on arrival,
 then this is by far the easiest option.
 In that case you do not need any documents beside your passport and
 the address where you will be staying.
-You can buy the on-arrival visa at the airport in Cairo at the counter on
-the right just before the immigration checkpoint.
+You can buy the on-arrival visa at the airport in Cairo at
+the money exchange counter on the right just before the immigration checkpoint.
 The on-arrival visa will cost you $25 and needs to be paid in cash, either in
-euro or in USD.
+Euro or in USD.
 You will receive a visa sticker,
-**do not put the visa in your passport yourself**,
-but give it to the officer at the immigration checkpoint, who will put it in your
-passport and stamp it.
+**do not put the visa sticker in your passport yourself**,
+but give it to the officer at the immigration checkpoint, who will stick it in
+your passport and stamp it.
 
 ## e-Visa
 
-Alternatively, you can buy an e-Visa online on the [Egypt e-Visa Portal][evisa].
+Alternatively, if you are not eligible for an on-arrival visa, or if you prefer
+to obtain your visa beforehand, you can buy an e-Visa online on the
+[Egypt e-Visa Portal][evisa].
 In the FAQ you will find the list of nationalities eligible for an e-Visa.
+
+[evisa]: https://visa2egypt.gov.eg/eVisa/
 
 ## Visa from the embassy
 
@@ -196,8 +202,6 @@ If you are not eligible for either an on-arrival visa or an e-Visa, you will
 need to contact the nearest Egyptian embassy to introduce a visa application.
 In this case, it is probably best to inform yourself well in advance about the
 duration of the procedure.
-
-[evisa]: https://visa2egypt.gov.eg/eVisa/
 """
 
 
