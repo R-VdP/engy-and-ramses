@@ -15,12 +15,12 @@ import Content
         , mainFont
         , mainTitleColour
         , maxContentTextWidth
+        , menuFontSize
         , minWindowWidth
         , paddingScaled
         , pageMenuButtonPadding
         , pagePadding
         , poemLines
-        , scaleFontSize
         , scaleSpacing
         , spacingScaled
         , subtitleColour
@@ -56,6 +56,7 @@ import Element
         , newTabLink
         , padding
         , paddingEach
+        , paddingXY
         , paragraph
         , px
         , rotate
@@ -360,10 +361,14 @@ view model =
 
 menu : Width -> Element Msg
 menu windowWidth =
+    let
+        filler : Int -> Element msg
+        filler maxWidth =
+            el [ width <| maximum maxWidth fill, height fill ] Element.none
+    in
     el
         [ htmlAttribute <| HA.id "main-menu"
         , width fill
-        , height shrink
         , Background.color blackTransparent
 
         -- TODO: is there a way to get sticky positioning in elm-ui so that
@@ -373,20 +378,17 @@ menu windowWidth =
         , htmlAttribute <| HA.style "position" "sticky"
         , htmlAttribute <| HA.style "top" "0"
         ]
+        << el [ width <| maximum maxContentTextWidth fill, centerX ]
     <|
         row
             [ htmlAttribute <| HA.id "main-menu-button-container"
-            , centerX
+            , width fill
+            , paddingXY (pageMenuButtonPadding windowWidth) 0
             , alignTop
-            , Font.size <| menuFontSize windowWidth
-            , Font.color almostWhite
             ]
-            (List.map (pageMenuButton windowWidth) pages)
-
-
-menuFontSize : Width -> Int
-menuFontSize width =
-    scaleFontSize width 0
+            (List.intersperse (filler <| menuFontSize windowWidth) <|
+                List.map (pageMenuButton windowWidth) pages
+            )
 
 
 pageMenuButton : Width -> Page -> Element Msg
@@ -394,12 +396,14 @@ pageMenuButton windowWidth page =
     Input.button
         [ htmlAttribute << HA.id <| "main-menu-button-" ++ pageShortTitle page
         , Border.width 0
+        , Font.size <| menuFontSize windowWidth
+        , Font.color almostWhite
         , Font.bold
-        , width fill
+        , centerX
         ]
         { onPress = Just (GoToPage page)
         , label =
-            el [ padding <| pageMenuButtonPadding windowWidth, centerX ]
+            el [ paddingXY 0 <| pageMenuButtonPadding windowWidth, centerX ]
                 << text
             <|
                 pageShortTitle page

@@ -15,6 +15,7 @@ module Content exposing
     , mainFont
     , mainTitleColour
     , maxContentTextWidth
+    , menuFontSize
     , minWindowWidth
     , paddingScaled
     , pageMenuButtonPadding
@@ -292,6 +293,11 @@ fontSizeH3 width =
     fontSizeScaled width 1
 
 
+menuFontSize : Width -> Int
+menuFontSize width =
+    scaleFontSize width 0
+
+
 scaleSpacing : Width -> Int -> Int
 scaleSpacing width =
     let
@@ -329,7 +335,7 @@ textSpacingScaled width =
 
 pageMenuButtonPadding : Width -> Int
 pageMenuButtonPadding width =
-    scaleSpacing width 1
+    scaleSpacing width 2
 
 
 pagePadding : Width -> Int
