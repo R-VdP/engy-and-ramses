@@ -24,14 +24,12 @@ module Content exposing
     , pagePadding
     , pageTitlefontSize
     , poemLines
-    , scaleFontSize
     , scaleSpacing
     , shadowGrey
     , spacingScaled
     , subtitleColour
     , textColour
     , textSpacing
-    , textSpacingScaled
     , titleColour
     , titleFont
     )

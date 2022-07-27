@@ -279,6 +279,7 @@ headerHeight width =
 jumpToPage : Width -> Page -> Cmd Msg
 jumpToPage windowWidth =
     let
+        headerHeightFloat : Float
         headerHeightFloat =
             toFloat <| headerHeight windowWidth
     in

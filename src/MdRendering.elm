@@ -2,8 +2,7 @@ module MdRendering exposing (rawTextToId, viewMarkdown)
 
 import Content
     exposing
-        ( defaultFontSize
-        , defaultFontSizeScale
+        ( defaultFontSizeScale
         , defaultTextSpacing
         , introBackgroundColour
         , spacingScaled
