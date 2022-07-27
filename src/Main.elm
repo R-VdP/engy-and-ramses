@@ -62,6 +62,7 @@ import Element
         , rotate
         , row
         , shrink
+        , spacing
         , text
         , textColumn
         , width
@@ -361,11 +362,6 @@ view model =
 
 menu : Width -> Element Msg
 menu windowWidth =
-    let
-        filler : Int -> Element msg
-        filler maxWidth =
-            el [ width <| maximum maxWidth fill, height fill ] Element.none
-    in
     el
         [ htmlAttribute <| HA.id "main-menu"
         , width fill
@@ -384,11 +380,14 @@ menu windowWidth =
             [ htmlAttribute <| HA.id "main-menu-button-container"
             , width fill
             , paddingXY (pageMenuButtonPadding windowWidth) 0
+
+            -- We put a space of menuFontSize between the menu elements
+            -- This space scales dynamically together with the font size
+            , spacing <| menuFontSize windowWidth
             , alignTop
             ]
-            (List.intersperse (filler <| menuFontSize windowWidth) <|
-                List.map (pageMenuButton windowWidth) pages
-            )
+        <|
+            List.map (pageMenuButton windowWidth) pages
 
 
 pageMenuButton : Width -> Page -> Element Msg
