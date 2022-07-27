@@ -2,7 +2,9 @@ module MdRendering exposing (rawTextToId, viewMarkdown)
 
 import Content
     exposing
-        ( defaultTextSpacing
+        ( defaultFontSize
+        , defaultFontSizeScale
+        , defaultTextSpacing
         , introBackgroundColour
         , spacingScaled
         , titleFont
@@ -17,6 +19,7 @@ import Element
         , html
         , htmlAttribute
         , image
+        , minimum
         , newTabLink
         , padding
         , paragraph
@@ -106,22 +109,58 @@ elmUiRenderer windowWidth =
                         ]
                 )
     , orderedList =
-        \startingIndex ->
-            column [ spacingScaled windowWidth (defaultTextSpacing // 2) ]
-                << List.indexedMap
-                    (\index itemBlocks ->
-                        row [ spacingScaled windowWidth 5 ]
-                            [ el
-                                [ alignTop
-                                , width shrink
-                                ]
-                                << text
-                              <|
-                                String.fromInt (index + startingIndex)
-                                    ++ ". "
-                            , paragraph [ width fill ] itemBlocks
+        \startingIndex listItems ->
+            let
+                --| Calculate the number of digits in the highest index
+                -- in this list
+                numberOfIndexDigits : Int
+                numberOfIndexDigits =
+                    -- We need to add one to get the number of digits
+                    (+) 1
+                        << floor
+                        << logBase 10
+                        << toFloat
+                        -- Compensate for rounding errors in the logBase function
+                        -- >>> logBase 10 1000
+                        -- 2.9999999999999996
+                        << (+) 1
+                    <|
+                        List.length listItems
+                            + startingIndex
+
+                --| The minimum width of the index element in front of every block
+                -- TODO: does this actually work properly for indexes > 10 ?
+                minimumIndexWidth : Int
+                minimumIndexWidth =
+                    let
+                        fixedStartAmount : Float
+                        fixedStartAmount =
+                            1
+
+                        additionalAmount : Float
+                        additionalAmount =
+                            0.5 * toFloat (numberOfIndexDigits - 1)
+                    in
+                    floor <|
+                        (fixedStartAmount + additionalAmount)
+                            * toFloat (defaultFontSizeScale windowWidth)
+
+                viewItem : Int -> List (Element msg) -> Element msg
+                viewItem index itemElements =
+                    row [ spacingScaled windowWidth 5 ]
+                        [ el
+                            [ alignTop
+                            , width <| minimum minimumIndexWidth shrink
                             ]
-                    )
+                            << text
+                          <|
+                            String.fromInt (index + startingIndex)
+                                ++ ". "
+                        , paragraph [ width fill ] itemElements
+                        ]
+            in
+            column [ spacingScaled windowWidth (defaultTextSpacing // 2) ] <|
+                List.indexedMap viewItem listItems
     , codeBlock = text << .body
     , html = Markdown.Html.oneOf []
     , table = column []
