@@ -36,10 +36,67 @@
   <script async defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "157dcef0f9c045d1aae83d9ae4a2ed92"}' fetchpriority="low"></script>
 
   <title>Engy & Ramses</title>
+
+  <style>
+    .loading p {
+      text-align: justify;
+      font-size: 20px;
+      font-weight: 700;
+
+      margin-top: 3px;
+      margin-bottom: 3px;
+      margin-left: 20px;
+      margin-right: 20px;
+    }
+    .loading {
+      display: block;
+      max-width: 700px;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      margin-right: -50%;
+      transform: translate(-50%, -50%);
+    }
+    .loading-msg {
+      opacity: 1;
+      animation-name: fadeIn;
+      animation-direction: reverse;
+      animation-duration: 2s;
+      animation-delay: 4s;
+      animation-fill-mode: forwards;
+      animation-timing-function: ease-out
+    }
+    .noscript {
+      opacity: 0;
+      animation-name: fadeIn;
+      animation-duration: 2s;
+      animation-delay: 3s;
+      animation-fill-mode: forwards;
+      animation-timing-function: ease-in
+    }
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+  </style>
 </head>
 
 <body>
   <noscript>This website requires JavaScript in order to function.</noscript>
+  <div class="loading">
+    <p><span class="loading-msg">
+      Loading the page...
+    </span></p>
+
+    <p><span class="noscript">
+      It looks like your browser does not support JavaScript...
+      Please enable JavaScript and reload this page.
+    </span></p>
+  </div>
 </body>
 
 </html>
