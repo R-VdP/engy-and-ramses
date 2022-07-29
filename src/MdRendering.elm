@@ -151,6 +151,7 @@ elmUiRenderer windowWidth =
                         [ el
                             [ alignTop
                             , width <| minimum minimumIndexWidth shrink
+                            , Font.alignRight
                             ]
                             << text
                           <|
