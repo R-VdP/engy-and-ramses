@@ -8,10 +8,8 @@ module Content exposing
     , defaultFontSize
     , defaultFontSizeScale
     , defaultTextSpacing
-    , fontSizeH1
-    , fontSizeH2
-    , fontSizeH3
     , fontSizeScaled
+    , headingFontSize
     , introBackgroundColour
     , introFont
     , mainFont
@@ -42,7 +40,7 @@ import Element
         , rgba255
         )
 import Element.Font as Font exposing (Font)
-import Types exposing (Width(..))
+import Types exposing (HeadingLevel(..), Width(..))
 
 
 accomodation : String
@@ -282,22 +280,24 @@ fontSizeScaled width =
 
 pageTitlefontSize : Width -> Attribute msg
 pageTitlefontSize width =
-    fontSizeScaled width 7
+    headingFontSize width H1
 
 
-fontSizeH1 : Width -> Attribute msg
-fontSizeH1 width =
-    fontSizeScaled width 4
+headingFontSize : Width -> HeadingLevel -> Attribute msg
+headingFontSize width level =
+    fontSizeScaled width <|
+        case level of
+            H1 ->
+                7
 
+            H2 ->
+                4
 
-fontSizeH2 : Width -> Attribute msg
-fontSizeH2 width =
-    fontSizeScaled width 2
+            H3 ->
+                2
 
-
-fontSizeH3 : Width -> Attribute msg
-fontSizeH3 width =
-    fontSizeScaled width 1
+            H4 ->
+                1
 
 
 defaultFontSize : Width -> Attribute msg
@@ -342,12 +342,7 @@ defaultTextSpacing =
 
 textSpacing : Width -> Attribute msg
 textSpacing width =
-    textSpacingScaled width defaultTextSpacing
-
-
-textSpacingScaled : Width -> Int -> Attribute msg
-textSpacingScaled width =
-    Element.spacing << scaleSpacing width
+    spacingScaled width defaultTextSpacing
 
 
 pageMenuButtonPadding : Width -> Int

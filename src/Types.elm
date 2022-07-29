@@ -1,5 +1,6 @@
 module Types exposing
-    ( Height(..)
+    ( HeadingLevel(..)
+    , Height(..)
     , Width(..)
     , WindowSize
     , handleResult
@@ -7,6 +8,13 @@ module Types exposing
     , mkWindowSize
     , widthToInt
     )
+
+
+type HeadingLevel
+    = H1
+    | H2
+    | H3
+    | H4
 
 
 type Width

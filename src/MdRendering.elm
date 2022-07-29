@@ -32,12 +32,13 @@ import Element.Background as Background
 import Element.Border as Border
 import Element.Font as Font
 import Element.Input as Input
-import Html
-import Html.Attributes
+import Element.Region as Region
+import Html as H
+import Html.Attributes as HA
 import Markdown.Block as Block exposing (ListItem(..), Task(..))
 import Markdown.Html
 import Markdown.Renderer
-import Types exposing (Width, handleResult)
+import Types exposing (HeadingLevel(..), Width, handleResult)
 
 
 viewMarkdown :
@@ -73,7 +74,7 @@ elmUiRenderer windowWidth =
                 { url = destination
                 , label = paragraph [ Font.underline ] body
                 }
-    , hardLineBreak = html <| Html.br [] []
+    , hardLineBreak = html <| H.br [] []
     , image =
         \img ->
             image [ width fill ]
@@ -180,23 +181,27 @@ heading :
         }
     -> Element msg
 heading windowWidth { level, rawText, children } =
+    let
+        -- We increase the level of the Markdown headings by 1
+        convertedHeadingLevel : HeadingLevel
+        convertedHeadingLevel =
+            case level of
+                Block.H1 ->
+                    H2
+
+                Block.H2 ->
+                    H3
+
+                _ ->
+                    H4
+    in
     paragraph
-        [ case level of
-            Block.H1 ->
-                Content.fontSizeH1 windowWidth
-
-            Block.H2 ->
-                Content.fontSizeH2 windowWidth
-
-            _ ->
-                Content.fontSizeH3 windowWidth
+        [ Region.heading <| Block.headingLevelToInt level + 1
+        , Content.headingFontSize windowWidth <| convertedHeadingLevel
         , Font.bold
         , Font.color introBackgroundColour
         , Font.family [ titleFont ]
-        , htmlAttribute
-            << Html.Attributes.id
-          <|
-            rawTextToId rawText
+        , htmlAttribute << HA.id <| rawTextToId rawText
         ]
         children
 

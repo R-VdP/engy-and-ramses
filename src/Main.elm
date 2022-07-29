@@ -9,8 +9,9 @@ import Content
         , blackTransparent
         , darkYellow
         , defaultFontSize
-        , fontSizeH1
+        , defaultTextSpacing
         , fontSizeScaled
+        , headingFontSize
         , introBackgroundColour
         , introFont
         , mainFont
@@ -76,6 +77,7 @@ import Element.Border as Border
 import Element.Font as Font
 import Element.Input as Input
 import Element.Lazy exposing (lazy, lazy2, lazy3)
+import Element.Region as Region
 import Html exposing (Html)
 import Html.Attributes as HA
 import Json.Decode as JDecode
@@ -85,7 +87,8 @@ import MdRendering exposing (rawTextToId)
 import Task
 import Types
     exposing
-        ( Height(..)
+        ( HeadingLevel(..)
+        , Height(..)
         , Width(..)
         , WindowSize
         , mkWindowSize
@@ -169,6 +172,11 @@ pageShortTitle page =
 titleToId : String -> String
 titleToId =
     (++) "page-id-" << rawTextToId
+
+
+pageToId : Page -> String
+pageToId =
+    titleToId << .title
 
 
 titleToIdAttr : String -> Attribute Msg
@@ -291,8 +299,7 @@ jumpToPage windowWidth =
                     (info.element.y - headerHeightFloat)
             )
         << Dom.getElement
-        << titleToId
-        << .title
+        << pageToId
 
 
 mkMarkdownPage : Width -> ParsedMarkdown -> String -> Element Msg
@@ -318,28 +325,30 @@ mkPage windowWidth title content =
         [ titleToIdAttr title
         , width fill
         , padding <| pagePadding windowWidth
-        , textSpacing windowWidth
+        , spacing
+            << floor
+            << (*) 1.5
+            << toFloat
+          <|
+            scaleSpacing windowWidth defaultTextSpacing
         ]
         [ viewPageTitle windowWidth title
-        , el
-            [ width fill
-            , paddingScaled windowWidth 8
-            ]
-            content
+        , content
         ]
 
 
 viewPageTitle : Width -> String -> Element Msg
 viewPageTitle windowWidth title =
     paragraph
-        [ alignTop
+        [ Region.heading 1
+        , alignTop
         , pageTitlefontSize windowWidth
         , Font.bold
         , Font.center
         , Font.color titleColour
         , Font.family [ titleFont ]
         ]
-        [ text <| title ]
+        [ text title ]
 
 
 view : Model -> Html Msg
@@ -353,7 +362,8 @@ view model =
             }
     in
     Element.layoutWith { options = [ Element.focusStyle focusStyle ] }
-        [ htmlAttribute <| HA.id "main-element"
+        [ Region.mainContent
+        , htmlAttribute <| HA.id "main-element"
         , width <| minimum minWindowWidth fill
         , defaultFontSize model.windowSize.width
         , Font.family
@@ -367,7 +377,8 @@ view model =
 menu : Width -> Element Msg
 menu windowWidth =
     el
-        [ htmlAttribute <| HA.id "main-menu"
+        [ Region.navigation
+        , htmlAttribute <| HA.id "main-menu"
         , width fill
         , Background.color blackTransparent
 
@@ -397,7 +408,7 @@ menu windowWidth =
 pageMenuButton : Width -> Page -> Element Msg
 pageMenuButton windowWidth page =
     Input.button
-        [ htmlAttribute << HA.id <| "main-menu-button-" ++ pageShortTitle page
+        [ htmlAttribute << HA.id <| "main-menu-button-" ++ pageToId page
         , Border.width 0
         , Font.size <| menuFontSize windowWidth
         , Font.color almostWhite
@@ -418,7 +429,7 @@ viewElement model =
     column
         [ htmlAttribute <| HA.id "page-container"
         , width fill
-        , textSpacing model.windowSize.width
+        , spacing <| pagePadding model.windowSize.width
         , Background.color almostWhite
         , Font.color textColour
         , inFront <| lazy menu model.windowSize.width
@@ -747,7 +758,7 @@ viewEventSummary windowWidth event =
         , centerX
         ]
         [ el
-            [ fontSizeH1 windowWidth
+            [ headingFontSize windowWidth H2
             , Font.bold
             , Font.color introBackgroundColour
             , Font.family [ titleFont ]
