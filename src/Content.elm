@@ -223,7 +223,7 @@ subtitleColour =
 
 titleColour : Color
 titleColour =
-    darkPink
+    darkPinkContrast
 
 
 textColour : Color
@@ -400,12 +400,17 @@ blackTransparent =
    lemonYellow : Color
    lemonYellow =
        rgb255 255 253 152
+
+
+   darkPink : Color
+   darkPink =
+       rgb255 255 115 142
 -}
 
 
-darkPink : Color
-darkPink =
-    rgb255 255 115 142
+darkPinkContrast : Color
+darkPinkContrast =
+    rgb255 214 2 101
 
 
 
