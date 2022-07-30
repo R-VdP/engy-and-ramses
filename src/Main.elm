@@ -1,4 +1,4 @@
-port module Main exposing (Model, Msg, ParsedMarkdown, main)
+port module Main exposing (Model, Msg, main)
 
 import Browser
 import Browser.Dom as Dom
@@ -362,8 +362,7 @@ view model =
             }
     in
     Element.layoutWith { options = [ Element.focusStyle focusStyle ] }
-        [ Region.mainContent
-        , htmlAttribute <| HA.id "main-element"
+        [ htmlAttribute <| HA.id "outer-element"
         , width <| minimum minWindowWidth fill
         , defaultFontSize model.windowSize.width
         , Font.family
@@ -377,8 +376,7 @@ view model =
 menu : Width -> Element Msg
 menu windowWidth =
     el
-        [ Region.navigation
-        , htmlAttribute <| HA.id "main-menu"
+        [ htmlAttribute <| HA.id "main-menu-container"
         , width fill
         , Background.color blackTransparent
 
@@ -392,7 +390,8 @@ menu windowWidth =
         << el [ width <| maximum maxContentTextWidth fill, centerX ]
     <|
         row
-            [ htmlAttribute <| HA.id "main-menu-button-container"
+            [ Region.navigation
+            , htmlAttribute <| HA.id "main-menu-button-container"
             , width fill
             , paddingXY (pageMenuButtonPadding windowWidth) 0
 
@@ -426,15 +425,20 @@ pageMenuButton windowWidth page =
 
 viewElement : Model -> Element Msg
 viewElement model =
-    column
-        [ htmlAttribute <| HA.id "page-container"
-        , width fill
-        , spacing <| pagePadding model.windowSize.width
-        , Background.color almostWhite
-        , Font.color textColour
+    el
+        [ width fill
         , inFront <| lazy menu model.windowSize.width
         ]
-        (List.map (\p -> p.view model p.title) pages)
+    <|
+        column
+            [ htmlAttribute <| HA.id "page-container"
+            , Region.mainContent
+            , width fill
+            , spacing <| pagePadding model.windowSize.width
+            , Background.color almostWhite
+            , Font.color textColour
+            ]
+            (List.map (\p -> p.view model p.title) pages)
 
 
 viewPoem : Width -> Element Msg
@@ -554,31 +558,43 @@ viewIntro model title =
             <|
                 desertPhoto 120
 
+        wrapHorizontalPictures : Element Msg -> Element Msg
+        wrapHorizontalPictures =
+            el
+                [ width fill
+
+                -- See below regarding the fillPortion
+                , height <| fillPortion 1
+                , paddingScaled windowSize.width 8
+                ]
+
         smallHorizontalPhotos : () -> Element Msg
         smallHorizontalPhotos _ =
-            el
-                [ centerX
-                , alignTop
-                , moveRight 60
-                , moveUp 10
-                , inFront <|
-                    el [ moveUp 10, moveLeft 130 ] <|
-                        berlinPhoto 150
-                ]
+            wrapHorizontalPictures
+                << el
+                    [ centerX
+                    , alignTop
+                    , moveRight 60
+                    , moveUp 10
+                    , inFront <|
+                        el [ moveUp 10, moveLeft 130 ] <|
+                            berlinPhoto 150
+                    ]
             <|
                 desertPhoto 150
 
         horizontalPhotos : () -> Element Msg
         horizontalPhotos _ =
-            el
-                [ centerX
-                , alignTop
-                , moveUp 10
-                , moveRight 90
-                , behindContent <|
-                    el [ moveUp 30, moveLeft 180 ] <|
-                        berlinPhoto 200
-                ]
+            wrapHorizontalPictures
+                << el
+                    [ centerX
+                    , alignTop
+                    , moveUp 10
+                    , moveRight 90
+                    , behindContent <|
+                        el [ moveUp 30, moveLeft 180 ] <|
+                            berlinPhoto 200
+                    ]
             <|
                 desertPhoto 200
 
@@ -608,6 +624,12 @@ viewIntro model title =
             , el
                 [ centerY
                 , width fill
+
+                -- The fillPortion matters when showing horizontal pictures below
+                -- In that case we divide the vertical space 2 to 1 between the
+                -- main content and the pictures.
+                -- When no other element is present with height set to fill or
+                -- fillPortion, then this behaves the same as a regular fill
                 , height <| fillPortion 2
                 , behindContent <|
                     if showLargeVerticalPhotos then
@@ -651,28 +673,11 @@ viewIntro model title =
                                 ++ "in celebrating our marriage"
                         ]
                     ]
-
-            -- We pin the pictures to the bottom.
-            -- Alternatively, we can set the textColumn and this element
-            -- to height fill and center the pictures in their surrounding
-            -- element.
             , if showLargeHorizontalPhotos then
-                el
-                    [ width fill
-                    , height <| fillPortion 1
-                    , paddingScaled windowSize.width 8
-                    ]
-                <|
-                    horizontalPhotos ()
+                horizontalPhotos ()
 
               else if showSmallHorizontalPhotos then
-                el
-                    [ width fill
-                    , height <| fillPortion 1
-                    , paddingScaled windowSize.width 8
-                    ]
-                <|
-                    smallHorizontalPhotos ()
+                smallHorizontalPhotos ()
 
               else
                 Element.none
