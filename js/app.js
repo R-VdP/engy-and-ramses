@@ -4,6 +4,16 @@ function initApp() {
   // The id of the element used to determine the viewport dimensions.
   const introElementId = "intro-full-viewport"
 
+  const scheduledHandlers = {}
+  function throttleEventHandler(handlerId, delay, callback) {
+    if (! scheduledHandlers.hasOwnProperty(handlerId)) {
+      scheduledHandlers[handlerId] = setTimeout(() => {
+        callback()
+        delete scheduledHandlers[handlerId]
+      }, delay);
+    }
+  }
+
   function getIntroElement() {
     return document.getElementById(introElementId)
   }
@@ -45,9 +55,21 @@ function initApp() {
         // Every time the viewport size changes, we inform the Elm app about this.
         // The observer will trigger a first time when observation starts.
         // See: https://www.w3.org/TR/resize-observer/#intro
-        new ResizeObserver(_entries => {
-          withApp(sendInnerDimensions)
+        new ResizeObserver(entries => {
+          throttleEventHandler("sendInnerDimensions", 200, () => {
+            withApp(sendInnerDimensions)
+          })
         }).observe(introElem)
+
+        document.addEventListener(
+          "scroll",
+          (event) => {
+            throttleEventHandler("sendScrollNotification", 300, () => {
+              withApp(app => app.ports.notifyScrolling.send({}))
+            })
+          },
+          { passive: true }
+        );
       }
     }).observe(document.body, { childList: true, subtree: true })
 

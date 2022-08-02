@@ -85,7 +85,7 @@ import Json.Encode as JEncode
 import Markdown.Block as MdBlock
 import Markdown.Parser
 import MdRendering exposing (rawTextToId)
-import Task
+import Task exposing (Task)
 import Types
     exposing
         ( HeadingLevel(..)
@@ -101,6 +101,9 @@ import Types
 {-| Receive window.innerWidth and window.innerHeight as a JSON value.
 -}
 port receiveWindowSize : (JDecode.Value -> msg) -> Sub msg
+
+
+port notifyScrolling : (JDecode.Value -> msg) -> Sub msg
 
 
 {-| Perform a smooth scroll in JavaScript.
@@ -139,12 +142,17 @@ type alias Page =
     }
 
 
+homePage : Page
+homePage =
+    { title = "Home"
+    , shortTitle = Nothing
+    , view = \model -> lazy2 viewIntro model
+    }
+
+
 pages : List Page
 pages =
-    [ { title = "Home"
-      , shortTitle = Nothing
-      , view = \model -> lazy2 viewIntro model
-      }
+    [ homePage
     , { title = "Events"
       , shortTitle = Nothing
       , view = \model -> lazy2 viewEvents model.windowSize.width
@@ -204,12 +212,15 @@ titleToIdAttr =
 type Msg
     = GoToPage Page
     | WindowResized WindowSize
-    | NoOp
+    | PageScrolled
     | JumpTo { x : Float, y : Float }
+    | SetActivePage String
+    | NoOp
 
 
 type alias Model =
     { introFullVpId : String
+    , activePageTitle : String
     , windowSize : WindowSize
     }
 
@@ -223,28 +234,28 @@ type alias Event =
     }
 
 
-type alias Flags =
-    Model
-
-
 init : JDecode.Value -> ( Model, Cmd Msg )
 init value =
     let
-        defaultFlags : Flags
-        defaultFlags =
+        defaultModel : Model
+        defaultModel =
             { introFullVpId = ""
+            , activePageTitle = homePage.title
             , windowSize = mkWindowSize (MkWidth 0) (MkHeight 0)
             }
 
-        mkFlags : String -> WindowSize -> Flags
-        mkFlags id size =
-            { introFullVpId = id, windowSize = size }
+        modelFromFlags : String -> WindowSize -> Model
+        modelFromFlags id size =
+            { introFullVpId = id
+            , activePageTitle = homePage.title
+            , windowSize = size
+            }
 
-        decodeFlags : JDecode.Value -> Flags
+        decodeFlags : JDecode.Value -> Model
         decodeFlags =
-            decodeWithDefault defaultFlags (flagsDecoder mkWindowSize mkFlags)
+            decodeWithDefault defaultModel (flagsDecoder mkWindowSize modelFromFlags)
     in
-    ( decodeFlags value, Cmd.none )
+    ( decodeFlags value, setActivePage )
 
 
 decodeWithDefault : a -> JDecode.Decoder a -> JDecode.Value -> a
@@ -283,8 +294,14 @@ update msg model =
 
         WindowResized newSize ->
             ( { model | windowSize = newSize }
-            , Cmd.none
+            , setActivePage
             )
+
+        PageScrolled ->
+            ( model, setActivePage )
+
+        SetActivePage pageTitle ->
+            ( { model | activePageTitle = pageTitle }, Cmd.none )
 
         GoToPage page ->
             ( model, jumpToPage model.windowSize.width page )
@@ -293,11 +310,52 @@ update msg model =
             ( model, smoothScrollTo x y )
 
 
+setActivePage : Cmd Msg
+setActivePage =
+    let
+        overlap : { y : Float, h : Float } -> { y : Float, h : Float } -> Float
+        overlap r1 r2 =
+            clamp 0 (2 ^ 32) <|
+                min (r1.y + r1.h) (r2.y + r2.h)
+                    - max r1.y r2.y
+
+        handlePageInfo : Page -> Dom.Element -> ( String, Float )
+        handlePageInfo page { element, viewport } =
+            ( page.title
+            , overlap
+                { y = element.y
+                , h = element.height
+                }
+                { y = viewport.y
+                , h = viewport.height
+                }
+            )
+
+        getPageOverlap : Page -> Task Dom.Error ( String, Float )
+        getPageOverlap page =
+            Task.map (handlePageInfo page) <| Dom.getElement (pageToId page)
+    in
+    Task.attempt (handleResult (always NoOp) SetActivePage)
+        << Task.map
+            (Maybe.withDefault homePage.title
+                << Maybe.map Tuple.first
+                -- TODO: There is not maximumBy, which would be more efficient
+                << List.head
+                << List.sortBy (negate << Tuple.second)
+            )
+        << Task.sequence
+    <|
+        List.map getPageOverlap pages
+
+
 subscriptions : Model -> Sub Msg
 subscriptions _ =
-    receiveWindowSize <|
-        decodeWithDefault NoOp <|
-            windowSizeDecoder (\w h -> WindowResized <| mkWindowSize w h)
+    Sub.batch
+        [ receiveWindowSize <|
+            decodeWithDefault NoOp <|
+                windowSizeDecoder (\w h -> WindowResized <| mkWindowSize w h)
+        , notifyScrolling (always PageScrolled)
+        ]
 
 
 headerHeight : Width -> Int
@@ -392,8 +450,8 @@ view model =
         (lazy viewElement model)
 
 
-menu : Width -> Element Msg
-menu windowWidth =
+menu : Model -> Element Msg
+menu ({ windowSize } as model) =
     el
         [ htmlAttribute <| HA.id "main-menu-container"
         , width fill
@@ -412,30 +470,37 @@ menu windowWidth =
             [ Region.navigation
             , htmlAttribute <| HA.id "main-menu-button-container"
             , width fill
-            , paddingXY (pageMenuButtonPadding windowWidth) 0
+            , paddingXY (pageMenuButtonPadding windowSize.width) 0
 
             -- We put a space of menuFontSize between the menu elements
             -- This space scales dynamically together with the font size
-            , spacing <| menuFontSize windowWidth
+            , spacing <| menuFontSize windowSize.width
             , alignTop
             ]
         <|
-            List.map (pageMenuButton windowWidth) pages
+            List.map (pageMenuButton model) pages
 
 
-pageMenuButton : Width -> Page -> Element Msg
-pageMenuButton windowWidth page =
+pageMenuButton : Model -> Page -> Element Msg
+pageMenuButton { activePageTitle, windowSize } page =
     Input.button
-        [ htmlAttribute << HA.id <| "main-menu-button-" ++ pageToId page
-        , Border.width 0
-        , Font.size <| menuFontSize windowWidth
-        , Font.color almostWhite
-        , Font.bold
-        , centerX
-        ]
+        ([ htmlAttribute << HA.id <| "main-menu-button-" ++ pageToId page
+         , Border.width 0
+         , Font.size <| menuFontSize windowSize.width
+         , Font.color almostWhite
+         , Font.bold
+         , centerX
+         ]
+            ++ (if page.title == activePageTitle then
+                    [ Font.underline ]
+
+                else
+                    []
+               )
+        )
         { onPress = Just (GoToPage page)
         , label =
-            el [ paddingXY 0 <| pageMenuButtonPadding windowWidth, centerX ]
+            el [ paddingXY 0 <| pageMenuButtonPadding windowSize.width, centerX ]
                 << text
             <|
                 pageShortTitle page
@@ -446,7 +511,7 @@ viewElement : Model -> Element Msg
 viewElement model =
     el
         [ width fill
-        , inFront <| lazy menu model.windowSize.width
+        , inFront <| lazy menu model
         ]
     <|
         column
