@@ -58,6 +58,14 @@ function initApp() {
         windowSize: getInnerDimensions()
       }
     })
+
+    app.ports.performSmoothScrollTo.subscribe(coordinates => {
+      window.scroll({
+        top: coordinates.y,
+        left: coordinates.x,
+        behavior: "smooth"
+      })
+    })
   }
 
   if (document.readyState === 'loading') {  // Loading hasn't finished yet

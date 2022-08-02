@@ -81,6 +81,7 @@ import Element.Region as Region
 import Html exposing (Html)
 import Html.Attributes as HA
 import Json.Decode as JDecode
+import Json.Encode as JEncode
 import Markdown.Block as MdBlock
 import Markdown.Parser
 import MdRendering exposing (rawTextToId)
@@ -91,6 +92,7 @@ import Types
         , Height(..)
         , Width(..)
         , WindowSize
+        , handleResult
         , mkWindowSize
         , widthToInt
         )
@@ -99,6 +101,21 @@ import Types
 {-| Receive window.innerWidth and window.innerHeight as a JSON value.
 -}
 port receiveWindowSize : (JDecode.Value -> msg) -> Sub msg
+
+
+{-| Perform a smooth scroll in JavaScript.
+The elm/browser package does not allow specifying the "smooth" option.
+-}
+port performSmoothScrollTo : JEncode.Value -> Cmd msg
+
+
+smoothScrollTo : Float -> Float -> Cmd msg
+smoothScrollTo x y =
+    performSmoothScrollTo <|
+        JEncode.object
+            [ ( "x", JEncode.float x )
+            , ( "y", JEncode.float y )
+            ]
 
 
 main : Program JDecode.Value Model Msg
@@ -188,6 +205,7 @@ type Msg
     = GoToPage Page
     | WindowResized WindowSize
     | NoOp
+    | JumpTo { x : Float, y : Float }
 
 
 type alias Model =
@@ -271,6 +289,9 @@ update msg model =
         GoToPage page ->
             ( model, jumpToPage model.windowSize.width page )
 
+        JumpTo { x, y } ->
+            ( model, smoothScrollTo x y )
+
 
 subscriptions : Model -> Sub Msg
 subscriptions _ =
@@ -287,19 +308,17 @@ headerHeight width =
 jumpToPage : Width -> Page -> Cmd Msg
 jumpToPage windowWidth =
     let
-        headerHeightFloat : Float
-        headerHeightFloat =
-            toFloat <| headerHeight windowWidth
+        elementInfoToMsg : Result x Dom.Element -> Msg
+        elementInfoToMsg =
+            handleResult (always NoOp)
+                (\{ element } ->
+                    JumpTo
+                        { x = element.x
+                        , y = element.y - toFloat (headerHeight windowWidth)
+                        }
+                )
     in
-    Task.attempt (always NoOp)
-        << Task.andThen
-            (\info ->
-                Dom.setViewport
-                    info.element.x
-                    (info.element.y - headerHeightFloat)
-            )
-        << Dom.getElement
-        << pageToId
+    Task.attempt elementInfoToMsg << Dom.getElement << pageToId
 
 
 mkMarkdownPage : Width -> ParsedMarkdown -> String -> Element Msg
