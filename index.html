@@ -57,15 +57,6 @@
       margin-right: -50%;
       transform: translate(-50%, -50%);
     }
-    .loading-msg {
-      opacity: 1;
-      animation-name: fadeIn;
-      animation-direction: reverse;
-      animation-duration: 2s;
-      animation-delay: 4s;
-      animation-fill-mode: forwards;
-      animation-timing-function: ease-out
-    }
     .noscript {
       opacity: 0;
       animation-name: fadeIn;
@@ -88,14 +79,13 @@
 <body>
   <noscript>This website requires JavaScript in order to function.</noscript>
   <div class="loading">
-    <p><span class="loading-msg">
+    <p class="loading-msg">
       Loading the page...
-    </span></p>
-
-    <p><span class="noscript">
+    </p>
+    <p class="noscript">
       It looks like your browser does not support JavaScript...
       Please enable JavaScript and reload this page.
-    </span></p>
+    </p>
   </div>
 </body>
 
