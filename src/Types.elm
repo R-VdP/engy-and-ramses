@@ -3,6 +3,7 @@ module Types exposing
     , Height(..)
     , Width(..)
     , WindowSize
+    , ensurePositive
     , handleResult
     , heightToInt
     , maximumBy
@@ -43,6 +44,15 @@ type alias WindowSize =
 mkWindowSize : Width -> Height -> WindowSize
 mkWindowSize width height =
     { width = width, height = height }
+
+
+ensurePositive : Float -> Float
+ensurePositive f =
+    if f < 0 then
+        0
+
+    else
+        f
 
 
 handleResult : (err -> a) -> (val -> a) -> Result err val -> a

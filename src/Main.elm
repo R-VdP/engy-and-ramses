@@ -92,6 +92,7 @@ import Types
         , Height(..)
         , Width(..)
         , WindowSize
+        , ensurePositive
         , handleResult
         , maximumBy
         , mkWindowSize
@@ -120,6 +121,20 @@ smoothScrollTo x y =
             [ ( "x", JEncode.float x )
             , ( "y", JEncode.float y )
             ]
+
+
+optionalAttribute : Bool -> Attribute Msg -> List (Attribute Msg)
+optionalAttribute p attr =
+    if p then
+        [ attr ]
+
+    else
+        []
+
+
+inlineStyle : String -> String -> Attribute Msg
+inlineStyle property value =
+    htmlAttribute <| HA.style property value
 
 
 main : Program JDecode.Value Model Msg
@@ -316,7 +331,7 @@ setActivePage =
     let
         overlap : { y : Float, h : Float } -> { y : Float, h : Float } -> Float
         overlap r1 r2 =
-            clamp 0 (2 ^ 32) <|
+            ensurePositive <|
                 min (r1.y + r1.h) (r2.y + r2.h)
                     - max r1.y r2.y
 
@@ -460,8 +475,8 @@ menu ({ windowSize } as model) =
         --       the menu always sticks to the top of the viewport but
         --       scrolls horizontally with the surrounding container when the
         --       viewport width is less than minWindowWidth ?
-        , htmlAttribute <| HA.style "position" "sticky"
-        , htmlAttribute <| HA.style "top" "0"
+        , inlineStyle "position" "sticky"
+        , inlineStyle "top" "0"
         ]
         << el [ width <| maximum maxContentTextWidth fill, centerX ]
     <|
@@ -483,23 +498,29 @@ menu ({ windowSize } as model) =
 pageMenuButton : Model -> Page -> Element Msg
 pageMenuButton { activePageTitle, windowSize } page =
     Input.button
-        ([ htmlAttribute << HA.id <| "main-menu-button-" ++ pageToId page
-         , Border.width 0
-         , Font.size <| menuFontSize windowSize.width
-         , Font.color almostWhite
-         , Font.bold
-         , centerX
-         ]
-            ++ (if page.title == activePageTitle then
-                    [ Font.underline ]
-
-                else
-                    []
-               )
-        )
+        [ htmlAttribute << HA.id <| "main-menu-button-" ++ pageToId page
+        , Border.width 0
+        , centerX
+        ]
         { onPress = Just (GoToPage page)
         , label =
-            el [ paddingXY 0 <| pageMenuButtonPadding windowSize.width, centerX ]
+            el
+                ([ paddingXY 0 <| pageMenuButtonPadding windowSize.width
+                 , centerX
+                 , Font.size <| menuFontSize windowSize.width
+                 , Font.color almostWhite
+                 , Font.bold
+                 , Font.underline
+
+                 -- Make the underlining transition animated
+                 -- easeOutSine easing function from https://easings.net/
+                 , inlineStyle "transition"
+                    "text-decoration-color 0.6s cubic-bezier(0.61, 1, 0.88, 1)"
+                 ]
+                    ++ (optionalAttribute (page.title /= activePageTitle) <|
+                            inlineStyle "text-decoration-color" "transparent"
+                       )
+                )
                 << text
             <|
                 pageShortTitle page
@@ -697,8 +718,8 @@ viewIntro model title =
         ]
         [ column
             [ width fill
-            , htmlAttribute <| HA.style "height" "100vh"
-            , htmlAttribute <| HA.style "min-height" "100vh"
+            , inlineStyle "height" "100vh"
+            , inlineStyle "min-height" "100vh"
             , paddingScaled windowSize.width 5
             , Background.color introBackgroundColour
             , htmlAttribute <| HA.id model.introFullVpId
@@ -769,7 +790,7 @@ viewIntro model title =
             [ width fill
             , height <| px introBaseHeight
             , Background.color introBackgroundColour
-            , htmlAttribute <| HA.style "clip-path" "polygon(0 0, 50% 100%, 100% 0)"
+            , inlineStyle "clip-path" "polygon(0 0, 50% 100%, 100% 0)"
             ]
             Element.none
         ]

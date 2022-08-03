@@ -64,7 +64,7 @@ function initApp() {
         document.addEventListener(
           "scroll",
           (event) => {
-            throttleEventHandler("sendScrollNotification", 300, () => {
+            throttleEventHandler("sendScrollNotification", 200, () => {
               withApp(app => app.ports.notifyScrolling.send({}))
             })
           },
