@@ -93,6 +93,7 @@ import Types
         , Width(..)
         , WindowSize
         , handleResult
+        , maximumBy
         , mkWindowSize
         , widthToInt
         )
@@ -339,9 +340,7 @@ setActivePage =
         << Task.map
             (Maybe.withDefault homePage.title
                 << Maybe.map Tuple.first
-                -- TODO: There is not maximumBy, which would be more efficient
-                << List.head
-                << List.sortBy (negate << Tuple.second)
+                << maximumBy Tuple.second
             )
         << Task.sequence
     <|

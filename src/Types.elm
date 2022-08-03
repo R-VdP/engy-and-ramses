@@ -5,6 +5,7 @@ module Types exposing
     , WindowSize
     , handleResult
     , heightToInt
+    , maximumBy
     , mkWindowSize
     , widthToInt
     )
@@ -52,3 +53,25 @@ handleResult errCont valCont result =
 
         Err err ->
             errCont err
+
+
+maximumBy : (a -> comparable) -> List a -> Maybe a
+maximumBy toComparable l =
+    let
+        maximumByNonEmpty : a -> List a -> a
+        maximumByNonEmpty =
+            List.foldl
+                (\a b ->
+                    if toComparable a >= toComparable b then
+                        a
+
+                    else
+                        b
+                )
+    in
+    case l of
+        [] ->
+            Nothing
+
+        x :: xs ->
+            Just <| maximumByNonEmpty x xs
