@@ -518,6 +518,10 @@ pageMenuButton { activePageTitle, windowSize } page =
                     "text-decoration-color 0.6s cubic-bezier(0.61, 1, 0.88, 1)"
                  ]
                     ++ (optionalAttribute (page.title /= activePageTitle) <|
+                            -- When the page is not active, we make
+                            -- the underline transparent.
+                            -- This property can be animated whereas underlining
+                            -- itself cannot.
                             inlineStyle "text-decoration-color" "transparent"
                        )
                 )
